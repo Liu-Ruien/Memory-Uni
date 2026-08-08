@@ -1,0 +1,188 @@
+import type { Photo } from '../data/photos'
+import { getSupabaseClient } from '../lib/supabase'
+import { maximumPhotoSize, type PhotoStorage, validatePhotoFile } from './PhotoStorage'
+
+interface PhotoRecord {
+  id: string
+  url: string
+  title: string | null
+  location: string | null
+  date: string | null
+  created_at: string
+  storage_path: string
+}
+
+interface UploadedRecord {
+  id: string
+  storagePath: string
+}
+
+const bucketName = 'memory-photos'
+const selectedColumns = 'id, url, title, location, date, created_at, storage_path'
+const accentPalette = ['#c7d4e7', '#d8c8b8', '#bdcbb8', '#d7c0c7', '#b7c9c8', '#ccbca7']
+
+function titleFromFilename(filename: string) {
+  const cleanName = filename.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ').trim()
+  if (!cleanName) return '未命名回忆'
+  return cleanName.charAt(0).toUpperCase() + cleanName.slice(1)
+}
+
+function currentMonth() {
+  const now = new Date()
+  return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function accentForId(id: string) {
+  const index = Array.from(id).reduce((sum, character) => sum + character.charCodeAt(0), 0) % accentPalette.length
+  return accentPalette[index]
+}
+
+function formatUploadDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return undefined
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+function toPhoto(record: PhotoRecord): Photo {
+  const title = record.title?.trim() || '未命名回忆'
+  return {
+    id: record.id,
+    src: record.url,
+    alt: `共享回忆：${title}`,
+    title,
+    location: record.location?.trim() || '共同回忆',
+    date: record.date?.trim() || '',
+    accentColor: accentForId(record.id),
+    gridAspect: 3 / 4,
+    source: 'supabase',
+    uploadedAt: formatUploadDate(record.created_at),
+  }
+}
+
+function storagePathFor() {
+  const id = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  const yearMonth = new Date().toISOString().slice(0, 7)
+  return `photos/${yearMonth}/${id}.webp`
+}
+
+function readableError(action: string, error: unknown) {
+  if (error instanceof Error) return `${action}：${error.message}`
+  if (typeof error === 'object' && error && 'message' in error) return `${action}：${String(error.message)}`
+  return `${action}，请检查网络连接和 Supabase 配置后重试。`
+}
+
+export class SupabasePhotoStorage implements PhotoStorage {
+  private storagePaths = new Map<string, string>()
+
+  async getPhotos() {
+    const client = getSupabaseClient()
+    const { data, error } = await client
+      .from('photos')
+      .select(selectedColumns)
+      .order('created_at', { ascending: false })
+
+    if (error) throw new Error(readableError('共享图库加载失败', error))
+
+    const records = (data ?? []) as PhotoRecord[]
+    records.forEach((record) => this.storagePaths.set(record.id, record.storage_path))
+    return records.map(toPhoto)
+  }
+
+  async uploadPhotos(files: File[]) {
+    const validationErrors = files.map(validatePhotoFile).filter((error): error is string => Boolean(error))
+    if (validationErrors.length > 0) throw new Error(validationErrors.join('\n'))
+    if (files.some((file) => file.size > maximumPhotoSize)) throw new Error('一张或多张照片超过了 10 MB。')
+    if (files.some((file) => file.type !== 'image/webp')) throw new Error('照片必须先完成 3:4 裁剪并转换为 WebP。')
+
+    const client = getSupabaseClient()
+    const uploadedPhotos: Photo[] = []
+    const createdRecords: UploadedRecord[] = []
+
+    try {
+      for (const file of files) {
+        const storagePath = storagePathFor()
+        const { error: storageError } = await client.storage
+          .from(bucketName)
+          .upload(storagePath, file, {
+            cacheControl: '31536000',
+            contentType: 'image/webp',
+            upsert: false,
+          })
+
+        if (storageError) throw new Error(readableError(`“${file.name}”上传到 Storage 失败`, storageError))
+
+        const { data: publicUrlData } = client.storage.from(bucketName).getPublicUrl(storagePath)
+        const { data: insertedData, error: databaseError } = await client
+          .from('photos')
+          .insert({
+            url: publicUrlData.publicUrl,
+            title: titleFromFilename(file.name),
+            location: null,
+            date: currentMonth(),
+            storage_path: storagePath,
+          })
+          .select(selectedColumns)
+          .single()
+
+        if (databaseError || !insertedData) {
+          const { error: cleanupError } = await client.storage.from(bucketName).remove([storagePath])
+          const cleanupMessage = cleanupError ? '；同时未能清理已上传文件，请在 Supabase 控制台检查孤立文件' : ''
+          throw new Error(`${readableError(`“${file.name}”的数据库记录创建失败`, databaseError)}${cleanupMessage}`)
+        }
+
+        const record = insertedData as PhotoRecord
+        createdRecords.push({ id: record.id, storagePath })
+        this.storagePaths.set(record.id, storagePath)
+        uploadedPhotos.unshift(toPhoto(record))
+      }
+
+      return uploadedPhotos
+    } catch (error) {
+      const rollbackErrors: string[] = []
+      for (const record of createdRecords.reverse()) {
+        const { error: storageRollbackError } = await client.storage.from(bucketName).remove([record.storagePath])
+        const { error: databaseRollbackError } = await client.from('photos').delete().eq('id', record.id)
+        if (storageRollbackError) rollbackErrors.push(readableError('Storage 回滚失败', storageRollbackError))
+        if (databaseRollbackError) rollbackErrors.push(readableError('数据库回滚失败', databaseRollbackError))
+        this.storagePaths.delete(record.id)
+      }
+      const originalError = error instanceof Error ? error : new Error(readableError('照片上传失败', error))
+      if (rollbackErrors.length > 0) {
+        throw new Error(`${originalError.message}；部分回滚操作失败：${rollbackErrors.join('；')}`)
+      }
+      throw originalError
+    }
+  }
+
+  async deletePhoto(id: string) {
+    if (id.startsWith('archive-')) throw new Error('网站自带的回忆照片不能从共享图库中删除。')
+
+    const client = getSupabaseClient()
+    let storagePath = this.storagePaths.get(id)
+
+    if (!storagePath) {
+      const { data, error } = await client.from('photos').select('storage_path').eq('id', id).single()
+      if (error || !data?.storage_path) throw new Error(readableError('找不到这张照片的 Storage 路径', error))
+      storagePath = String(data.storage_path)
+    }
+
+    const { data: removedObjects, error: storageError } = await client.storage.from(bucketName).remove([storagePath])
+    if (storageError) throw new Error(readableError('Storage 文件删除失败', storageError))
+    if (!removedObjects || removedObjects.length === 0) {
+      throw new Error('Storage 文件没有被删除。请确认已执行最新的 supabase/setup.sql（删除操作同时需要 SELECT 与 DELETE 策略）。')
+    }
+
+    const { error: databaseError } = await client.from('photos').delete().eq('id', id)
+    if (databaseError) {
+      throw new Error(`${readableError('数据库记录删除失败', databaseError)}。Storage 文件已经删除，请在 Supabase 控制台清理该记录。`)
+    }
+
+    this.storagePaths.delete(id)
+  }
+}
