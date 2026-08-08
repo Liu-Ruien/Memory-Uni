@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { FanCarousel } from './components/FanCarousel'
+import { EmptyMemoryState } from './components/EmptyMemoryState'
 import { Header } from './components/Header'
 import { LandingPage } from './components/LandingPage'
 import { PhotoGrid } from './components/PhotoGrid'
@@ -21,7 +22,7 @@ function getInitialTheme(): Theme {
 }
 
 function App() {
-  const [activeIndex, setActiveIndex] = useState(2)
+  const [activeIndex, setActiveIndex] = useState(0)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [managerOpen, setManagerOpen] = useState(false)
   const [sharedPhotos, setSharedPhotos] = useState<Photo[]>([])
@@ -95,10 +96,14 @@ function App() {
     setSharedPhotos(remainingSharedPhotos)
 
     const preservedIndex = remainingPhotos.findIndex((photo) => photo.id === currentPhotoId)
-    setActiveIndex(preservedIndex >= 0 ? preservedIndex : Math.min(Math.max(0, deletedIndex), remainingPhotos.length - 1))
+    setActiveIndex(remainingPhotos.length === 0
+      ? 0
+      : preservedIndex >= 0
+        ? preservedIndex
+        : Math.min(Math.max(0, deletedIndex), remainingPhotos.length - 1))
   }
 
-  const activePhoto = allPhotos[activeIndex] ?? archivePhotos[0]
+  const activePhoto = allPhotos[activeIndex]
 
   return (
     <div id="top" className="relative min-h-screen overflow-clip bg-[#f7f7f5] text-neutral-900 transition-colors duration-500 dark:bg-[#0d0d0d] dark:text-neutral-100">
@@ -119,7 +124,7 @@ function App() {
           <motion.div
             aria-hidden="true"
             className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[62vw] max-h-[820px] min-h-[430px] w-[76vw] max-w-[1080px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.14] blur-[120px] dark:opacity-[0.1] sm:blur-[150px]"
-            animate={{ backgroundColor: activePhoto.accentColor }}
+            animate={{ backgroundColor: activePhoto?.accentColor ?? '#d8c8b8' }}
             transition={{ duration: 0.9, ease: 'easeInOut' }}
           />
 
@@ -144,17 +149,23 @@ function App() {
               2022.09–2026.06
             </motion.p>
 
-            <FanCarousel
-              photos={allPhotos}
-              activeIndex={activeIndex}
-              onActiveIndexChange={setActiveIndex}
-              onOpen={() => setViewerOpen(true)}
-              keyboardEnabled={!viewerOpen && !managerOpen}
-            />
+            {allPhotos.length > 0 ? (
+              <FanCarousel
+                photos={allPhotos}
+                activeIndex={activeIndex}
+                onActiveIndexChange={setActiveIndex}
+                onOpen={() => setViewerOpen(true)}
+                keyboardEnabled={!viewerOpen && !managerOpen}
+              />
+            ) : (
+              <EmptyMemoryState isLoading={sharedPhotosLoading} onUpload={() => setManagerOpen(true)} />
+            )}
           </div>
         </section>
 
-        <PhotoGrid photos={allPhotos} isLoading={sharedPhotosLoading} onSelect={openPhoto} />
+        {(allPhotos.length > 0 || sharedPhotosLoading) && (
+          <PhotoGrid photos={allPhotos} isLoading={sharedPhotosLoading} onSelect={openPhoto} />
+        )}
 
         <section id="about" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pb-32 pt-8 sm:px-8 sm:pb-40 sm:pt-16 lg:px-12">
           <div className="grid gap-8 border-t border-black/[0.07] pt-12 dark:border-white/[0.08] sm:grid-cols-[1fr_2fr] sm:pt-16">
@@ -171,13 +182,15 @@ function App() {
         <p className="tabular-nums">2022—2026</p>
       </footer>
 
-      <PhotoViewer
-        photos={allPhotos}
-        activeIndex={activeIndex}
-        isOpen={viewerOpen}
-        onClose={() => setViewerOpen(false)}
-        onActiveIndexChange={setActiveIndex}
-      />
+      {allPhotos.length > 0 && (
+        <PhotoViewer
+          photos={allPhotos}
+          activeIndex={activeIndex}
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          onActiveIndexChange={setActiveIndex}
+        />
+      )}
 
       <PhotoManager
         isOpen={managerOpen}

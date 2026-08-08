@@ -9,9 +9,14 @@ create table if not exists public.photos (
   title text not null default '未命名回忆',
   location text,
   date text,
+  taken_at date,
   created_at timestamptz not null default now(),
   storage_path text not null unique
 );
+
+-- 兼容已经创建过 photos 表的项目。
+alter table public.photos
+  add column if not exists taken_at date;
 
 create index if not exists photos_created_at_idx
   on public.photos (created_at desc);

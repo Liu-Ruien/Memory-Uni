@@ -1,8 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import Cropper, { type Area } from 'react-easy-crop'
-import { useCallback, useEffect, useState } from 'react'
+import Cropper, { type Area, type MediaSize, type Size } from 'react-easy-crop'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { maximumPhotoSize } from '../storage/PhotoStorage'
 
+const cropAspect = 3 / 4
+const cropViewportPadding = 18
 const maximumOutputLongEdge = 4096
 const qualityLevels = [0.94, 0.9, 0.86]
 const dimensionReduction = 0.85
@@ -27,14 +29,69 @@ function loadImage(src: string) {
   })
 }
 
+function largestCropSize(containerWidth: number, containerHeight: number): Size {
+  const availableWidth = Math.max(1, containerWidth - cropViewportPadding * 2)
+  const availableHeight = Math.max(1, containerHeight - cropViewportPadding * 2)
+
+  if (availableWidth / availableHeight > cropAspect) {
+    return { width: availableHeight * cropAspect, height: availableHeight }
+  }
+
+  return { width: availableWidth, height: availableWidth / cropAspect }
+}
+
+function minimumCoverZoom(mediaSize: MediaSize | null, cropSize: Size | null) {
+  if (!mediaSize || !cropSize || mediaSize.width <= 0 || mediaSize.height <= 0) return 1
+
+  const requiredZoom = Math.max(
+    cropSize.width / mediaSize.width,
+    cropSize.height / mediaSize.height,
+  )
+
+  // Round upward so sub-pixel layout differences cannot expose an image edge.
+  return Math.ceil(requiredZoom * 10_000) / 10_000
+}
+
+function validatedPixelCrop(crop: Area, sourceWidth: number, sourceHeight: number): Area {
+  const values = [crop.x, crop.y, crop.width, crop.height, sourceWidth, sourceHeight]
+  if (values.some((value) => !Number.isFinite(value))) {
+    throw new Error('裁剪区域无效，请重新调整照片。')
+  }
+
+  const width = Math.round(crop.width)
+  const height = Math.round(crop.height)
+  const roundedX = Math.round(crop.x)
+  const roundedY = Math.round(crop.y)
+  const roundingTolerance = 1
+
+  if (
+    width <= 0
+    || height <= 0
+    || width > sourceWidth
+    || height > sourceHeight
+    || crop.x < -roundingTolerance
+    || crop.y < -roundingTolerance
+    || crop.x + crop.width > sourceWidth + roundingTolerance
+    || crop.y + crop.height > sourceHeight + roundingTolerance
+  ) {
+    throw new Error('裁剪区域超出了原始照片，请重新调整后再试。')
+  }
+
+  const x = Math.min(Math.max(0, roundedX), sourceWidth - width)
+  const y = Math.min(Math.max(0, roundedY), sourceHeight - height)
+
+  return { x, y, width, height }
+}
+
 async function createCroppedFile(imageSrc: string, crop: Area, filename: string) {
   const image = await loadImage(imageSrc)
+  const safeCrop = validatedPixelCrop(crop, image.naturalWidth, image.naturalHeight)
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d', { alpha: false })
   if (!context) throw new Error('当前浏览器无法创建裁剪画布。')
 
-  const initialScale = Math.min(1, maximumOutputLongEdge / crop.height)
-  let outputWidth = Math.max(3, Math.floor((crop.width * initialScale) / 3) * 3)
+  const initialScale = Math.min(1, maximumOutputLongEdge / safeCrop.height)
+  let outputWidth = Math.max(3, Math.floor((safeCrop.width * initialScale) / 3) * 3)
   let outputHeight = (outputWidth / 3) * 4
 
   for (let dimensionPass = 0; dimensionPass < maximumDimensionPasses; dimensionPass += 1) {
@@ -44,10 +101,10 @@ async function createCroppedFile(imageSrc: string, crop: Area, filename: string)
     context.imageSmoothingQuality = 'high'
     context.drawImage(
       image,
-      crop.x,
-      crop.y,
-      crop.width,
-      crop.height,
+      safeCrop.x,
+      safeCrop.y,
+      safeCrop.width,
+      safeCrop.height,
       0,
       0,
       outputWidth,
@@ -85,18 +142,64 @@ export function ImageCropper({
   onCancel,
   onConfirm,
 }: ImageCropperProps) {
+  const cropViewportRef = useRef<HTMLDivElement>(null)
+  const hasSetInitialZoom = useRef(false)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
+  const [mediaSize, setMediaSize] = useState<MediaSize | null>(null)
+  const [cropSize, setCropSize] = useState<Size | null>(null)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const minZoom = useMemo(() => minimumCoverZoom(mediaSize, cropSize), [cropSize, mediaSize])
+  const maxZoom = Math.max(3, minZoom * 3)
 
   useEffect(() => {
+    hasSetInitialZoom.current = false
     setCrop({ x: 0, y: 0 })
     setZoom(1)
+    setMediaSize(null)
     setCroppedAreaPixels(null)
     setError(null)
   }, [imageSrc])
+
+  useEffect(() => {
+    const viewport = cropViewportRef.current
+    if (!viewport) return
+
+    const updateCropSize = () => {
+      const bounds = viewport.getBoundingClientRect()
+      const nextSize = largestCropSize(bounds.width, bounds.height)
+      setCropSize((currentSize) => {
+        if (
+          currentSize
+          && Math.abs(currentSize.width - nextSize.width) < 0.5
+          && Math.abs(currentSize.height - nextSize.height) < 0.5
+        ) {
+          return currentSize
+        }
+        return nextSize
+      })
+    }
+
+    updateCropSize()
+    const observer = new ResizeObserver(updateCropSize)
+    observer.observe(viewport)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!mediaSize || !cropSize) return
+
+    if (!hasSetInitialZoom.current) {
+      hasSetInitialZoom.current = true
+      setCrop({ x: 0, y: 0 })
+      setZoom(minZoom)
+      return
+    }
+
+    setZoom((currentZoom) => Math.min(maxZoom, Math.max(minZoom, currentZoom)))
+  }, [cropSize, maxZoom, mediaSize, minZoom])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -109,6 +212,10 @@ export function ImageCropper({
   const handleCropComplete = useCallback((_area: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels)
   }, [])
+
+  const handleZoomChange = useCallback((nextZoom: number) => {
+    setZoom(Math.min(maxZoom, Math.max(minZoom, nextZoom)))
+  }, [maxZoom, minZoom])
 
   const confirmCrop = async () => {
     if (!croppedAreaPixels || isProcessing) return
@@ -164,23 +271,28 @@ export function ImageCropper({
             </button>
           </header>
 
-          <div className="relative mx-4 h-[54dvh] min-h-[320px] overflow-hidden rounded-[20px] bg-[#111] sm:mx-7 sm:h-[58dvh] sm:max-h-[610px] sm:min-h-[390px] sm:rounded-[22px]">
-            <Cropper
-              image={imageSrc}
-              crop={crop}
-              zoom={zoom}
-              aspect={3 / 4}
-              minZoom={1}
-              maxZoom={3}
-              cropShape="rect"
-              objectFit="contain"
-              showGrid={!isNearTargetRatio}
-              zoomWithScroll
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={handleCropComplete}
-              classes={{ cropAreaClassName: '!border-white/90 !shadow-[0_0_0_9999em_rgba(0,0,0,0.52)]' }}
-            />
+          <div ref={cropViewportRef} className="relative mx-4 h-[54dvh] min-h-[320px] overflow-hidden rounded-[20px] bg-[#111] sm:mx-7 sm:h-[58dvh] sm:max-h-[610px] sm:min-h-[390px] sm:rounded-[22px]">
+            {cropSize && (
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={cropAspect}
+                cropSize={cropSize}
+                minZoom={minZoom}
+                maxZoom={maxZoom}
+                cropShape="rect"
+                objectFit="contain"
+                restrictPosition
+                showGrid={!isNearTargetRatio}
+                zoomWithScroll
+                onMediaLoaded={setMediaSize}
+                onCropChange={setCrop}
+                onZoomChange={handleZoomChange}
+                onCropComplete={handleCropComplete}
+                classes={{ cropAreaClassName: '!border-white/90 !shadow-[0_0_0_9999em_rgba(0,0,0,0.52)]' }}
+              />
+            )}
           </div>
 
           <div className="px-5 pb-5 pt-4 sm:px-7 sm:pb-7 sm:pt-5">
@@ -188,11 +300,11 @@ export function ImageCropper({
               <span className="text-[10px] text-neutral-400">缩放</span>
               <input
                 type="range"
-                min={1}
-                max={3}
+                min={minZoom}
+                max={maxZoom}
                 step={0.01}
                 value={zoom}
-                onChange={(event) => setZoom(Number(event.target.value))}
+                onChange={(event) => handleZoomChange(Number(event.target.value))}
                 className="h-1 flex-1 cursor-pointer accent-neutral-900 dark:accent-neutral-100"
                 aria-label="照片缩放"
               />

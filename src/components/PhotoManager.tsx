@@ -1,14 +1,17 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import type { Photo } from '../data/photos'
+import { formatTakenAt, isValidTakenAt, readExifTakenAt, rememberTakenAt } from '../lib/photoTakenAt'
 import { validatePhotoFile } from '../storage/PhotoStorage'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { ImageCropper } from './ImageCropper'
+import { TakenDateModal } from './TakenDateModal'
 
 interface PendingPhoto {
   file: File
   imageSrc: string
   isNearTargetRatio: boolean
+  takenAt?: string
 }
 
 type UploadStage = 'idle' | 'preparing' | 'processing' | 'uploading' | 'success'
@@ -33,7 +36,6 @@ function UploadProgress({ stage, count }: { stage: Exclude<UploadStage, 'idle'>;
 
   return (
     <motion.div
-      key={stage}
       initial={{ opacity: 0, y: 8, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -5, scale: 0.99 }}
@@ -102,6 +104,9 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
   const [uploadStage, setUploadStage] = useState<UploadStage>('idle')
   const [completedUploadCount, setCompletedUploadCount] = useState(0)
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([])
+  const [preparedPhotos, setPreparedPhotos] = useState<PendingPhoto[]>([])
+  const [takenDateInput, setTakenDateInput] = useState('')
+  const [takenDateError, setTakenDateError] = useState<string | null>(null)
   const [croppedFiles, setCroppedFiles] = useState<File[]>([])
   const [cropTotal, setCropTotal] = useState(0)
   const [photoPendingDeletion, setPhotoPendingDeletion] = useState<Photo | null>(null)
@@ -112,14 +117,14 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
     document.body.style.overflow = 'hidden'
     const handleKeyDown = (event: KeyboardEvent) => {
       if (photoPendingDeletion) return
-      if (event.key === 'Escape' && processingFiles.length === 0 && pendingPhotos.length === 0) onClose()
+      if (event.key === 'Escape' && processingFiles.length === 0 && pendingPhotos.length === 0 && preparedPhotos.length === 0) onClose()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, onClose, pendingPhotos.length, photoPendingDeletion, processingFiles.length])
+  }, [isOpen, onClose, pendingPhotos.length, photoPendingDeletion, preparedPhotos.length, processingFiles.length])
 
   useEffect(() => {
     if (isOpen) return
@@ -136,14 +141,27 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
   }
 
   const inspectPhoto = async (file: File): Promise<PendingPhoto> => {
-    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+    const [bitmap, takenAt] = await Promise.all([
+      createImageBitmap(file, { imageOrientation: 'from-image' }),
+      readExifTakenAt(file),
+    ])
     const aspect = bitmap.width / bitmap.height
     bitmap.close()
     return {
       file,
       imageSrc: URL.createObjectURL(file),
       isNearTargetRatio: Math.abs(aspect - 3 / 4) <= 0.025,
+      takenAt: takenAt ?? undefined,
     }
+  }
+
+  const beginCropping = (photos: PendingPhoto[]) => {
+    setPreparedPhotos([])
+    setTakenDateInput('')
+    setTakenDateError(null)
+    setCropTotal(photos.length)
+    setCroppedFiles([])
+    setPendingPhotos(photos)
   }
 
   const handleFiles = async (fileList: FileList | null) => {
@@ -166,9 +184,13 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
       setUploadStage('processing')
       for (const file of validFiles) inspected.push(await inspectPhoto(file))
-      setCropTotal(inspected.length)
-      setCroppedFiles([])
-      setPendingPhotos(inspected)
+      if (inspected.some((photo) => !photo.takenAt)) {
+        setPreparedPhotos(inspected)
+        setTakenDateInput('')
+        setTakenDateError(null)
+      } else {
+        beginCropping(inspected)
+      }
     } catch (error) {
       inspected.forEach((photo) => URL.revokeObjectURL(photo.imageSrc))
       void error
@@ -176,6 +198,46 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
       setFeedback({ kind: 'error', text: '这张照片暂时无法整理，请重新选择一张。' })
     } finally {
       setProcessingFiles([])
+    }
+  }
+
+  const missingDateIndex = preparedPhotos.findIndex((photo) => !photo.takenAt)
+  const photoAwaitingDate = missingDateIndex >= 0 ? preparedPhotos[missingDateIndex] : null
+
+  const confirmTakenDate = () => {
+    if (!isValidTakenAt(takenDateInput)) {
+      setTakenDateError('请选择有效的拍摄日期。')
+      return
+    }
+    if (!photoAwaitingDate) return
+
+    const updatedPhotos = preparedPhotos.map((photo, index) => (
+      index === missingDateIndex ? { ...photo, takenAt: takenDateInput } : photo
+    ))
+    setTakenDateInput('')
+    setTakenDateError(null)
+    if (updatedPhotos.some((photo) => !photo.takenAt)) {
+      setPreparedPhotos(updatedPhotos)
+    } else {
+      beginCropping(updatedPhotos)
+    }
+  }
+
+  const cancelTakenDate = () => {
+    if (!photoAwaitingDate) return
+    URL.revokeObjectURL(photoAwaitingDate.imageSrc)
+    const remainingPhotos = preparedPhotos.filter((_, index) => index !== missingDateIndex)
+    setTakenDateInput('')
+    setTakenDateError(null)
+
+    if (remainingPhotos.length === 0) {
+      setPreparedPhotos([])
+      setUploadStage('idle')
+      setFeedback({ kind: 'info', text: '已取消这张照片，原始照片没有被保存。' })
+    } else if (remainingPhotos.some((photo) => !photo.takenAt)) {
+      setPreparedPhotos(remainingPhotos)
+    } else {
+      beginCropping(remainingPhotos)
     }
   }
 
@@ -191,6 +253,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
   const confirmCroppedPhoto = async (file: File) => {
     const currentPhoto = pendingPhotos[0]
     const remainingPhotos = pendingPhotos.slice(1)
+    if (currentPhoto?.takenAt) rememberTakenAt(file, currentPhoto.takenAt)
     const readyFiles = [...croppedFiles, file]
     if (currentPhoto) URL.revokeObjectURL(currentPhoto.imageSrc)
 
@@ -257,7 +320,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
           exit={{ opacity: 0 }}
           transition={{ duration: 0.22 }}
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !photoPendingDeletion && processingFiles.length === 0 && pendingPhotos.length === 0) onClose()
+            if (event.target === event.currentTarget && !photoPendingDeletion && processingFiles.length === 0 && pendingPhotos.length === 0 && preparedPhotos.length === 0) onClose()
           }}
           role="presentation"
         >
@@ -279,7 +342,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
               <button
                 type="button"
                 onClick={onClose}
-                disabled={processingFiles.length > 0 || pendingPhotos.length > 0 || Boolean(photoPendingDeletion)}
+                disabled={processingFiles.length > 0 || pendingPhotos.length > 0 || preparedPhotos.length > 0 || Boolean(photoPendingDeletion)}
                 className="grid size-10 place-items-center rounded-full border border-black/10 bg-white/60 text-lg text-neutral-600 transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-40 dark:border-white/15 dark:bg-white/[0.04] dark:text-neutral-300 dark:hover:bg-white/[0.09]"
                 aria-label="关闭照片管理"
               >
@@ -302,7 +365,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
               <button
                 type="button"
                 onClick={choosePhotos}
-                disabled={isLoading || processingFiles.length > 0 || pendingPhotos.length > 0 || Boolean(storageError)}
+                disabled={isLoading || processingFiles.length > 0 || pendingPhotos.length > 0 || preparedPhotos.length > 0 || Boolean(storageError)}
                 className="flex min-h-20 w-full items-center justify-between rounded-[18px] border border-dashed border-black/15 bg-white/45 px-5 py-5 text-left transition-colors hover:border-black/30 hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:bg-white/[0.025] dark:hover:border-white/25 dark:hover:bg-white/[0.055] sm:px-6 sm:py-6"
               >
                 <span>
@@ -312,7 +375,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
                 <span className="grid size-10 place-items-center rounded-full bg-neutral-900 text-lg text-white dark:bg-neutral-100 dark:text-neutral-900" aria-hidden="true">＋</span>
               </button>
 
-              <AnimatePresence mode="wait">
+              <AnimatePresence initial={false}>
                 {uploadStage !== 'idle' && (
                   <UploadProgress
                     stage={uploadStage}
@@ -384,7 +447,9 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
                           >
                             {deleting ? '·' : '×'}
                           </button>
-                          <p className="absolute inset-x-0 bottom-0 truncate bg-black/35 px-2.5 py-2 text-[9px] text-white/90 backdrop-blur-sm">{photo.title}</p>
+                          <p className="absolute inset-x-0 bottom-0 truncate bg-black/35 px-2.5 py-2 text-[9px] text-white/90 backdrop-blur-sm">
+                            {photo.takenAt ? `拍摄于 ${formatTakenAt(photo.takenAt)}` : '拍摄时间未知'}
+                          </p>
                         </motion.div>
                       )
                     })}
@@ -392,7 +457,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
                 </div>
               ) : (
                 <div className="rounded-[18px] border border-black/[0.06] px-5 py-9 text-center dark:border-white/[0.07]">
-                  <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-300">这里还没有留下共同回忆，<br />上传第一张照片吧。</p>
+                  <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-300">这里还没有共同回忆，<br />上传第一张照片吧。</p>
                   <button
                     type="button"
                     onClick={choosePhotos}
@@ -423,6 +488,18 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
           onConfirm={confirmCroppedPhoto}
         />
       )}
+      <TakenDateModal
+        isOpen={isOpen && Boolean(photoAwaitingDate)}
+        filename={photoAwaitingDate?.file.name ?? ''}
+        value={takenDateInput}
+        error={takenDateError}
+        onChange={(value) => {
+          setTakenDateInput(value)
+          setTakenDateError(null)
+        }}
+        onCancel={cancelTakenDate}
+        onConfirm={confirmTakenDate}
+      />
       <DeleteConfirmModal
         key="delete-confirm-modal"
         isOpen={isOpen && Boolean(photoPendingDeletion)}

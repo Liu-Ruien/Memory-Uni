@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import type { Photo } from '../data/photos'
 import { carouselEntranceSpring } from '../hooks/useCarouselAnimation'
+import { formatTakenAt } from '../lib/photoTakenAt'
 
 export interface CardLayout {
   x: number
@@ -52,6 +53,7 @@ export function PhotoCard({
       ? isCenter ? layout.scale * 1.03 : layout.scale + 0.04
       : layout.scale
   const targetRotate = isLifting ? 0 : hoverActive && !isCenter ? layout.rotate * 0.5 : layout.rotate
+  const takenAt = formatTakenAt(photo.takenAt)
 
   return (
     <motion.button
@@ -111,13 +113,14 @@ export function PhotoCard({
         fetchPriority={isCenter ? 'high' : 'auto'}
         decoding="async"
       />
-      {photo.source === 'supabase' && (photo.title !== '未命名回忆' || photo.uploadedAt) && (
+      {photo.source === 'supabase' && (
         <span
           className={`pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent px-4 pb-4 pt-14 text-white transition-opacity duration-300 ${isCenter ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
           aria-hidden="true"
         >
-          {photo.title !== '未命名回忆' && <span className="block truncate text-[11px] font-medium">{photo.title}</span>}
-          {photo.uploadedAt && <span className="mt-1 block text-[9px] tracking-[0.05em] text-white/65">上传于 {photo.uploadedAt}</span>}
+          <span className="block text-[10px] font-medium tracking-[0.04em] text-white/85">
+            {takenAt ? `拍摄于 ${takenAt}` : '拍摄时间未知'}
+          </span>
         </span>
       )}
       <span className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/20" aria-hidden="true" />

@@ -1,4 +1,5 @@
 import type { Photo } from '../data/photos'
+import { formatTakenAt, getRememberedTakenAt } from '../lib/photoTakenAt'
 import { getSupabaseClient } from '../lib/supabase'
 import { maximumPhotoSize, type PhotoStorage, validatePhotoFile } from './PhotoStorage'
 
@@ -8,6 +9,7 @@ interface PhotoRecord {
   title: string | null
   location: string | null
   date: string | null
+  taken_at: string | null
   created_at: string
   storage_path: string
 }
@@ -18,48 +20,28 @@ interface UploadedRecord {
 }
 
 const bucketName = 'memory-photos'
-const selectedColumns = 'id, url, title, location, date, created_at, storage_path'
+const selectedColumns = 'id, url, title, location, date, taken_at, created_at, storage_path'
 const accentPalette = ['#c7d4e7', '#d8c8b8', '#bdcbb8', '#d7c0c7', '#b7c9c8', '#ccbca7']
-
-function titleFromFilename(filename: string) {
-  const cleanName = filename.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ').trim()
-  if (!cleanName) return '未命名回忆'
-  return cleanName.charAt(0).toUpperCase() + cleanName.slice(1)
-}
-
-function currentMonth() {
-  const now = new Date()
-  return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}`
-}
 
 function accentForId(id: string) {
   const index = Array.from(id).reduce((sum, character) => sum + character.charCodeAt(0), 0) % accentPalette.length
   return accentPalette[index]
 }
 
-function formatUploadDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return undefined
-  return new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date)
-}
-
 function toPhoto(record: PhotoRecord): Photo {
-  const title = record.title?.trim() || '未命名回忆'
+  const formattedTakenAt = formatTakenAt(record.taken_at)
+  const displayTitle = formattedTakenAt ? `拍摄于 ${formattedTakenAt}` : '拍摄时间未知'
   return {
     id: record.id,
     src: record.url,
-    alt: `共享回忆：${title}`,
-    title,
-    location: record.location?.trim() || '共同回忆',
+    alt: `共同回忆照片，${displayTitle}`,
+    title: displayTitle,
+    location: record.location?.trim() || '',
     date: record.date?.trim() || '',
     accentColor: accentForId(record.id),
     gridAspect: 3 / 4,
     source: 'supabase',
-    uploadedAt: formatUploadDate(record.created_at),
+    takenAt: record.taken_at ?? undefined,
   }
 }
 
@@ -106,6 +88,8 @@ export class SupabasePhotoStorage implements PhotoStorage {
 
     try {
       for (const file of files) {
+        const takenAt = getRememberedTakenAt(file)
+        if (!takenAt) throw new Error('请先确认照片的拍摄时间。')
         const storagePath = storagePathFor()
         const { error: storageError } = await client.storage
           .from(bucketName)
@@ -122,9 +106,10 @@ export class SupabasePhotoStorage implements PhotoStorage {
           .from('photos')
           .insert({
             url: publicUrlData.publicUrl,
-            title: titleFromFilename(file.name),
+            title: '未命名回忆',
             location: null,
-            date: currentMonth(),
+            date: null,
+            taken_at: takenAt,
             storage_path: storagePath,
           })
           .select(selectedColumns)
