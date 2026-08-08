@@ -1,5 +1,3 @@
-import { parse } from 'exifr'
-
 const takenAtByFile = new WeakMap<File, string>()
 
 function toDateInputValue(value: unknown): string | null {
@@ -27,17 +25,12 @@ export function isValidTakenAt(value: string) {
 
 export function formatTakenAt(value?: string | null) {
   if (!value) return null
-  const normalized = toDateInputValue(value)
-  return normalized?.replaceAll('-', '.') ?? null
+  return toDateInputValue(value)
 }
 
-export async function readExifTakenAt(file: File): Promise<string | null> {
-  try {
-    const metadata = await parse(file, ['DateTimeOriginal']) as { DateTimeOriginal?: unknown } | undefined
-    return toDateInputValue(metadata?.DateTimeOriginal)
-  } catch {
-    return null
-  }
+export async function readExifTakenAt(_file: File): Promise<string | null> {
+  // 手机与电脑统一由用户确认拍摄日期，避免不同设备保留 EXIF 的行为不一致。
+  return null
 }
 
 export function rememberTakenAt(file: File, takenAt: string) {
