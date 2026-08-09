@@ -114,11 +114,7 @@ function App() {
       />
 
       <main className="relative z-10">
-        <LandingPage
-          photos={allPhotos}
-          isLoading={sharedPhotosLoading}
-          onStart={() => setManagerOpen(true)}
-        />
+        <LandingPage />
 
         <section
           id="memory-section"
