@@ -1,12 +1,12 @@
-import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
-import { FanCarousel } from './components/FanCarousel'
 import { EmptyMemoryState } from './components/EmptyMemoryState'
 import { Header } from './components/Header'
 import { LandingPage } from './components/LandingPage'
-import { PhotoGrid } from './components/PhotoGrid'
+import { MemoryTimeline } from './components/MemoryTimeline'
 import { PhotoManager } from './components/PhotoManager'
 import { PhotoViewer } from './components/PhotoViewer'
+import { YearMemoryGallery } from './components/YearMemoryGallery'
+import { academicYears, getAcademicYearId, type AcademicYearId } from './data/academicYears'
 import { photos as archivePhotos, type Photo } from './data/photos'
 import type { PhotoStorage } from './storage/PhotoStorage'
 import { SupabasePhotoStorage } from './storage/SupabasePhotoStorage'
@@ -30,6 +30,13 @@ function App() {
   const [storageError, setStorageError] = useState<string | null>(null)
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const allPhotos = useMemo(() => [...archivePhotos, ...sharedPhotos], [sharedPhotos])
+  const photosByYear = useMemo(
+    () => academicYears.map((year) => ({
+      year,
+      photos: allPhotos.filter((photo) => getAcademicYearId(photo) === year.id),
+    })),
+    [allPhotos],
+  )
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -74,9 +81,18 @@ function App() {
     if (activeIndex >= allPhotos.length) setActiveIndex(Math.max(0, allPhotos.length - 1))
   }, [activeIndex, allPhotos.length])
 
-  const openPhoto = (index: number) => {
+  const openPhoto = (photoId: string) => {
+    const index = allPhotos.findIndex((photo) => photo.id === photoId)
+    if (index < 0) return
     setActiveIndex(index)
     setViewerOpen(true)
+  }
+
+  const scrollToYear = (yearId: AcademicYearId) => {
+    document.getElementById(`year-${yearId}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
   }
 
   const uploadPhotos = async (files: File[]) => {
@@ -103,8 +119,6 @@ function App() {
         : Math.min(Math.max(0, deletedIndex), remainingPhotos.length - 1))
   }
 
-  const activePhoto = allPhotos[activeIndex]
-
   return (
     <div id="top" className="relative min-h-screen overflow-clip bg-[#f7f7f5] text-neutral-900 transition-colors duration-500 dark:bg-[#0d0d0d] dark:text-neutral-100">
       <Header
@@ -115,56 +129,21 @@ function App() {
 
       <main className="relative z-10">
         <LandingPage />
+        <MemoryTimeline onSelectYear={scrollToYear} />
 
-        <section
-          id="memory-section"
-          className="relative flex min-h-[100svh] scroll-mt-0 items-center justify-center overflow-hidden py-16 sm:py-20"
-          aria-labelledby="university-heading"
-        >
-          <motion.div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[62vw] max-h-[820px] min-h-[430px] w-[76vw] max-w-[1080px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.14] blur-[120px] dark:opacity-[0.1] sm:blur-[150px]"
-            animate={{ backgroundColor: activePhoto?.accentColor ?? '#d8c8b8' }}
-            transition={{ duration: 0.9, ease: 'easeInOut' }}
-          />
-
-          <div className="w-full">
-            <motion.h1
-              id="university-heading"
-              className="text-center text-[clamp(2.15rem,5vw,4.25rem)] font-medium leading-none tracking-[-0.055em] text-neutral-950 dark:text-[#f5f5f1]"
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.7 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            >
-              Linyi University
-            </motion.h1>
-            <motion.p
-              className="mt-4 text-center text-[10px] tracking-[0.18em] text-neutral-500 dark:text-neutral-400 sm:mt-5 sm:text-[11px]"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true, amount: 0.7 }}
-              transition={{ duration: 0.5, delay: 0.12 }}
-            >
-              2022.09–2026.06
-            </motion.p>
-
-            {allPhotos.length > 0 ? (
-              <FanCarousel
-                photos={allPhotos}
-                activeIndex={activeIndex}
-                onActiveIndexChange={setActiveIndex}
-                onOpen={() => setViewerOpen(true)}
-                keyboardEnabled={!viewerOpen && !managerOpen}
-              />
-            ) : (
-              <EmptyMemoryState isLoading={sharedPhotosLoading} onUpload={() => setManagerOpen(true)} />
-            )}
-          </div>
-        </section>
-
-        {(allPhotos.length > 0 || sharedPhotosLoading) && (
-          <PhotoGrid photos={allPhotos} isLoading={sharedPhotosLoading} onSelect={openPhoto} />
+        {allPhotos.length > 0 ? (
+          photosByYear.map(({ year, photos }) => (
+            <YearMemoryGallery
+              key={year.id}
+              year={year}
+              photos={photos}
+              onSelect={openPhoto}
+            />
+          ))
+        ) : (
+          <section className="mx-auto max-w-[920px] px-5 pb-28 sm:px-8 sm:pb-36">
+            <EmptyMemoryState isLoading={sharedPhotosLoading} onUpload={() => setManagerOpen(true)} />
+          </section>
         )}
 
         <section id="about" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pb-32 pt-8 sm:px-8 sm:pb-40 sm:pt-16 lg:px-12">

@@ -1,0 +1,155 @@
+.morph-slider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0b0d;
+  user-select: none;
+  touch-action: pan-y;
+  isolation: isolate;
+}
+
+.morph-slider-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: grab;
+  outline: none;
+}
+
+.morph-slider-stage:active {
+  cursor: grabbing;
+}
+
+.morph-slider-stage:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.65);
+}
+
+.morph-slider-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.morph-slider-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #0b0b0d;
+  opacity: 1;
+  transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.morph-slider-fallback.is-hidden {
+  opacity: 0;
+}
+
+.morph-slider-controls {
+  position: absolute;
+  inset: 50% 0 auto;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 18px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.morph-slider-button {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(10, 10, 12, 0.38);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 260ms ease,
+    border-color 260ms ease;
+}
+
+.morph-slider-button:hover {
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(20, 20, 23, 0.62);
+  transform: scale(1.06);
+}
+
+.morph-slider-button:active {
+  transform: scale(0.95);
+}
+
+.morph-slider-indicators {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 4;
+  display: flex;
+  width: min(70%, 520px);
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 5px 2px;
+  transform: translateX(-50%);
+  scrollbar-width: none;
+}
+
+.morph-slider-indicators::-webkit-scrollbar {
+  display: none;
+}
+
+.morph-slider-dot {
+  width: 7px;
+  min-width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+  cursor: pointer;
+  transition:
+    width calc(var(--morph-duration) * 0.42) cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 240ms ease;
+}
+
+.morph-slider-dot.is-active {
+  width: 22px;
+  min-width: 22px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+@media (max-width: 640px) {
+  .morph-slider-controls {
+    padding: 0 10px;
+  }
+
+  .morph-slider-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .morph-slider-indicators {
+    bottom: 12px;
+    width: min(64%, 320px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .morph-slider-fallback,
+  .morph-slider-button,
+  .morph-slider-dot {
+    transition: none;
+  }
+}
