@@ -9,12 +9,6 @@ interface GraduationMemoryCounterProps {
 
 const defaultGraduationDate = '2026-06-18T00:00:00+08:00'
 const millisecondsPerDay = 86_400_000
-const counterHoverSpring = {
-  type: 'spring',
-  duration: 0.3,
-  bounce: 0,
-} as const
-
 function getElapsedDays(graduationDate: string) {
   const graduationTime = new Date(graduationDate).getTime()
   if (!Number.isFinite(graduationTime)) return 0
@@ -138,8 +132,6 @@ export function GraduationMemoryCounter({ graduationDate = defaultGraduationDate
     >
       <motion.div
         className="graduation-counter-interaction"
-        whileHover={reduceMotion ? undefined : { scale: 1.02 }}
-        transition={counterHoverSpring}
         data-motion-transform="true"
       >
         {supportsLiquidGlass && !reduceMotion ? (
@@ -150,7 +142,7 @@ export function GraduationMemoryCounter({ graduationDate = defaultGraduationDate
               blurAmount={0.02}
               saturation={102}
               aberrationIntensity={0.12}
-              elasticity={0.08}
+              elasticity={0}
               cornerRadius={30}
               padding="0px"
               overLight={false}

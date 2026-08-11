@@ -3,6 +3,7 @@ import { EmptyMemoryState } from './components/EmptyMemoryState'
 import { GraduationMemoryCounter } from './components/GraduationMemoryCounter'
 import { Header } from './components/Header'
 import { LandingPage } from './components/LandingPage'
+import { MemoryFilmEntry } from './components/MemoryFilmEntry'
 import { MemoryTimeline } from './components/MemoryTimeline'
 import { PhotoManager } from './components/PhotoManager'
 import { PhotoViewer } from './components/PhotoViewer'
@@ -14,15 +15,7 @@ import { useAcademicYearSchema } from './hooks/useAcademicYearSchema'
 import type { PhotoStorage } from './storage/PhotoStorage'
 import { SupabasePhotoStorage } from './storage/SupabasePhotoStorage'
 
-type Theme = 'light' | 'dark'
 const photoStorage: PhotoStorage = new SupabasePhotoStorage()
-
-function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'light'
-  const saved = window.localStorage.getItem('archive-theme')
-  if (saved === 'light' || saved === 'dark') return saved
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
 
 function App() {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -31,7 +24,6 @@ function App() {
   const [sharedPhotos, setSharedPhotos] = useState<Photo[]>([])
   const [sharedPhotosLoading, setSharedPhotosLoading] = useState(true)
   const [storageError, setStorageError] = useState<string | null>(null)
-  const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const academicYearSchemaStatus = useAcademicYearSchema()
   const allPhotos = useMemo(() => [...archivePhotos, ...sharedPhotos], [sharedPhotos])
   const photosByYear = useMemo(
@@ -41,13 +33,6 @@ function App() {
     })),
     [allPhotos],
   )
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    window.localStorage.setItem('archive-theme', theme)
-    const metaTheme = document.querySelector('meta[name="theme-color"]')
-    metaTheme?.setAttribute('content', theme === 'dark' ? '#000000' : '#f5f5f7')
-  }, [theme])
 
   useEffect(() => {
     let cancelled = false
@@ -124,10 +109,8 @@ function App() {
   }
 
   return (
-    <div id="top" className="memory-album-bg relative min-h-screen overflow-clip text-[var(--page-fg)] transition-colors duration-500">
+    <div id="top" className="memory-album-bg relative min-h-screen overflow-clip text-[var(--page-fg)]">
       <Header
-        theme={theme}
-        onToggleTheme={() => setTheme((current) => (current === 'light' ? 'dark' : 'light'))}
         onOpenPhotoManager={() => setManagerOpen(true)}
       />
 
@@ -154,21 +137,26 @@ function App() {
           </section>
         )}
 
-        <section id="about" className="scroll-mt-24 px-5 pb-12 pt-20 sm:px-8 sm:pb-16 sm:pt-24 lg:px-12">
+        <section id="about" className="ending-block scroll-mt-24 px-5 pb-0 pt-[60px] sm:px-8 sm:pt-[72px] lg:px-12">
           <div className="mx-auto w-full max-w-[800px] text-center">
             <p className="apple-kicker">关于这段记录</p>
             <ScrollTextReveal
               className="mt-7 text-[clamp(1.45rem,3vw,2.55rem)] font-medium leading-[1.24] tracking-[-0.04em] sm:mt-9"
               text="这里没有完整的故事，只有一些被时间留下的片段。它们提醒我，那些看似普通的日子，也曾真实地构成我们的人生。"
             />
+
+            <div className="mt-10 sm:mt-12">
+              <GraduationMemoryCounter />
+            </div>
+
+            <MemoryFilmEntry />
           </div>
         </section>
       </main>
 
-      <footer className="relative z-10 w-full pb-10 sm:pb-12">
+      <footer className="relative z-10 w-full pb-10 pt-6 sm:pb-12 sm:pt-8">
         <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">
-          <GraduationMemoryCounter />
-          <div className="footer-liquid-glass apple-tertiary-text mt-4 flex w-full items-center justify-between rounded-full px-5 py-3.5 text-[11px] sm:mt-5 sm:px-6">
+          <div className="footer-liquid-glass apple-tertiary-text flex w-full items-center justify-between rounded-full px-5 py-3.5 text-[11px] sm:px-6">
             <p>把那些日子，好好留下。</p>
             <p className="tabular-nums">2022—2026</p>
           </div>

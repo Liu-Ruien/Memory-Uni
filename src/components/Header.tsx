@@ -1,14 +1,10 @@
 import { useEffect, useState } from 'react'
-import { MusicControl } from './MusicControl'
-import { ThemeToggle } from './ThemeToggle'
 
 interface HeaderProps {
-  theme: 'light' | 'dark'
-  onToggleTheme: () => void
   onOpenPhotoManager: () => void
 }
 
-export function Header({ theme, onToggleTheme, onOpenPhotoManager }: HeaderProps) {
+export function Header({ onOpenPhotoManager }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -31,7 +27,7 @@ export function Header({ theme, onToggleTheme, onOpenPhotoManager }: HeaderProps
           我的回忆
         </a>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           <a href="#memory-section" className="hidden rounded-full px-4 py-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors duration-[180ms] hover:text-[var(--page-fg)] md:block">
             回忆
           </a>
@@ -41,16 +37,11 @@ export function Header({ theme, onToggleTheme, onOpenPhotoManager }: HeaderProps
           <button
             type="button"
             onClick={onOpenPhotoManager}
-            className="apple-toolbar-button px-0 sm:min-w-0 sm:px-4"
+            className="apple-toolbar-button min-w-0 px-4"
             aria-label="管理共享图库中的照片"
           >
-            <svg className="size-[17px] sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            <span className="hidden text-[12px] font-semibold sm:inline">管理照片</span>
+            <span className="text-[12px] font-semibold">管理照片</span>
           </button>
-          <MusicControl />
-          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         </div>
       </nav>
     </header>

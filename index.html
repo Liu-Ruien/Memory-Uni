@@ -6,13 +6,6 @@
     <meta name="theme-color" content="#f7f7f5" />
     <meta name="description" content="关于人生、时间与回忆的个人档案。" />
     <title>我的回忆 — 那些值得记住的时光</title>
-    <script>
-      try {
-        const theme = localStorage.getItem('archive-theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.classList.toggle('dark', theme === 'dark' || (!theme && prefersDark));
-      } catch (_) {}
-    </script>
   </head>
   <body>
     <div id="root"></div>
