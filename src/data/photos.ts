@@ -1,3 +1,5 @@
+import type { AcademicYearId } from './academicYears'
+
 export interface Photo {
   id: string
   src: string
@@ -10,6 +12,7 @@ export interface Photo {
   source: 'archive' | 'local' | 'supabase'
   uploadedAt?: string
   takenAt?: string
+  academicYear?: AcademicYearId
 }
 
 export const photos: Photo[] = []

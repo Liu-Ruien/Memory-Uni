@@ -1,102 +1,42 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import type { AcademicYearId } from '../data/academicYears'
 import type { Photo } from '../data/photos'
-import { formatTakenAt, isValidTakenAt, readExifTakenAt, rememberTakenAt } from '../lib/photoTakenAt'
+import { appleEaseOut, appleSpring } from '../design/motion'
+import type { AcademicYearSchemaStatus } from '../hooks/useAcademicYearSchema'
+import { detectPhotoAspect, isNearPhotoAspect, type PhotoAspectPreset } from '../lib/photoAspect'
+import { formatTakenAt, isValidTakenAt, readExifTakenAt, rememberAcademicYear, rememberTakenAt } from '../lib/photoTakenAt'
 import { validatePhotoFile } from '../storage/PhotoStorage'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { ImageCropper } from './ImageCropper'
+import { MemorySaveProgress, type MemorySaveStage } from './MemorySaveProgress'
 import { TakenDateModal } from './TakenDateModal'
 
 interface PendingPhoto {
   file: File
   imageSrc: string
   isNearTargetRatio: boolean
+  aspectPreset: PhotoAspectPreset
   takenAt?: string
+  academicYear?: AcademicYearId
 }
 
-type UploadStage = 'idle' | 'preparing' | 'processing' | 'uploading' | 'success'
+type UploadStage = 'idle' | MemorySaveStage
 type Feedback = { kind: 'info' | 'error' | 'removed'; text: string }
-
-const uploadSteps: Array<{ id: Exclude<UploadStage, 'idle'>; label: string }> = [
-  { id: 'preparing', label: '准备上传' },
-  { id: 'processing', label: '图片处理中' },
-  { id: 'uploading', label: '上传云端' },
-  { id: 'success', label: '保存成功' },
-]
-
-function UploadProgress({ stage, count }: { stage: Exclude<UploadStage, 'idle'>; count: number }) {
-  const activeStep = uploadSteps.findIndex((step) => step.id === stage)
-  const heading = stage === 'success'
-    ? '新的回忆已经加入'
-    : stage === 'preparing'
-      ? '准备好这份回忆…'
-      : stage === 'processing'
-        ? '正在整理这份回忆…'
-        : '正在把回忆送往云端…'
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.985 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -5, scale: 0.99 }}
-      transition={stage === 'success'
-        ? { type: 'spring', stiffness: 210, damping: 22, mass: 0.75 }
-        : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className={`mt-4 rounded-[18px] border px-4 py-4 sm:px-5 ${stage === 'success'
-        ? 'border-emerald-700/10 bg-emerald-500/[0.07] dark:border-emerald-200/10 dark:bg-emerald-300/[0.06]'
-        : 'border-black/[0.06] bg-white/55 dark:border-white/[0.07] dark:bg-white/[0.03]'}`}
-      role="status"
-      aria-live="polite"
-    >
-      <div className="flex items-center gap-3">
-        <motion.span
-          initial={stage === 'success' ? { scale: 0.6, rotate: -10 } : false}
-          animate={stage === 'success' ? { scale: 1, rotate: 0 } : { rotate: 360 }}
-          transition={stage === 'success'
-            ? { type: 'spring', stiffness: 240, damping: 18 }
-            : { duration: 1.2, ease: 'linear', repeat: Infinity }}
-          className={`grid size-8 shrink-0 place-items-center rounded-full text-sm ${stage === 'success'
-            ? 'bg-emerald-700 text-white dark:bg-emerald-200 dark:text-emerald-950'
-            : 'border border-black/10 text-neutral-500 dark:border-white/15 dark:text-neutral-300'}`}
-          aria-hidden="true"
-        >
-          {stage === 'success' ? '✓' : '·'}
-        </motion.span>
-        <div>
-          <p className="text-sm font-medium tracking-[-0.015em]">{heading}</p>
-          <p className="mt-1 text-[10px] text-neutral-400 dark:text-neutral-500">
-            {stage === 'success' ? `${count} 张照片已经出现在共同相册中。` : `正在处理 ${count} 张照片，请稍候。`}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-4 gap-1.5" aria-label="上传进度">
-        {uploadSteps.map((step, index) => (
-          <div key={step.id} className="min-w-0">
-            <div className={`h-0.5 rounded-full transition-colors duration-500 ${index <= activeStep
-              ? 'bg-neutral-700 dark:bg-neutral-200'
-              : 'bg-black/[0.08] dark:bg-white/[0.1]'}`} />
-            <p className={`mt-1.5 truncate text-[8px] sm:text-[9px] ${index <= activeStep
-              ? 'text-neutral-600 dark:text-neutral-300'
-              : 'text-neutral-300 dark:text-neutral-700'}`}>{step.label}</p>
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  )
-}
 
 interface PhotoManagerProps {
   isOpen: boolean
   photos: Photo[]
   isLoading: boolean
   storageError: string | null
+  academicYearSchemaStatus: AcademicYearSchemaStatus
   onClose: () => void
   onUpload: (files: File[]) => Promise<void>
   onDelete: (id: string) => Promise<void>
 }
 
-export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose, onUpload, onDelete }: PhotoManagerProps) {
+export function PhotoManager({ isOpen, photos, isLoading, storageError, academicYearSchemaStatus, onClose, onUpload, onDelete }: PhotoManagerProps) {
+  const reduceMotion = useReducedMotion()
   const inputRef = useRef<HTMLInputElement>(null)
   const [processingFiles, setProcessingFiles] = useState<string[]>([])
   const [deletingIds, setDeletingIds] = useState<string[]>([])
@@ -106,6 +46,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
   const [pendingPhotos, setPendingPhotos] = useState<PendingPhoto[]>([])
   const [preparedPhotos, setPreparedPhotos] = useState<PendingPhoto[]>([])
   const [takenDateInput, setTakenDateInput] = useState('')
+  const [academicYearInput, setAcademicYearInput] = useState<AcademicYearId | ''>('')
   const [takenDateError, setTakenDateError] = useState<string | null>(null)
   const [croppedFiles, setCroppedFiles] = useState<File[]>([])
   const [cropTotal, setCropTotal] = useState(0)
@@ -145,12 +86,14 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
       createImageBitmap(file, { imageOrientation: 'from-image' }),
       readExifTakenAt(file),
     ])
-    const aspect = bitmap.width / bitmap.height
+    const aspectPreset = detectPhotoAspect(bitmap.width, bitmap.height)
+    const isNearTargetRatio = isNearPhotoAspect(bitmap.width, bitmap.height, aspectPreset)
     bitmap.close()
     return {
       file,
       imageSrc: URL.createObjectURL(file),
-      isNearTargetRatio: Math.abs(aspect - 3 / 4) <= 0.025,
+      isNearTargetRatio,
+      aspectPreset,
       takenAt: takenAt ?? undefined,
     }
   }
@@ -158,6 +101,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
   const beginCropping = (photos: PendingPhoto[]) => {
     setPreparedPhotos([])
     setTakenDateInput('')
+    setAcademicYearInput('')
     setTakenDateError(null)
     setCropTotal(photos.length)
     setCroppedFiles([])
@@ -169,24 +113,31 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
     if (inputRef.current) inputRef.current.value = ''
     if (files.length === 0) return
 
+    setUploadStage('reading')
+    setProcessingFiles(files.map((file) => file.name))
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+
+    setUploadStage('checking')
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
     const validationErrors = files.map(validatePhotoFile).filter((error): error is string => Boolean(error))
     const validFiles = files.filter((file) => !validatePhotoFile(file))
     setFeedback(validationErrors.length > 0 ? { kind: 'error', text: validationErrors.join(' ') } : null)
     if (validFiles.length === 0) {
       setUploadStage('idle')
+      setProcessingFiles([])
       return
     }
 
-    setUploadStage('preparing')
     setProcessingFiles(validFiles.map((file) => file.name))
     const inspected: PendingPhoto[] = []
     try {
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
       setUploadStage('processing')
       for (const file of validFiles) inspected.push(await inspectPhoto(file))
-      if (inspected.some((photo) => !photo.takenAt)) {
+      setCropTotal(inspected.length)
+      if (inspected.some((photo) => !photo.takenAt || !photo.academicYear)) {
         setPreparedPhotos(inspected)
         setTakenDateInput('')
+        setAcademicYearInput('')
         setTakenDateError(null)
       } else {
         beginCropping(inspected)
@@ -201,22 +152,29 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
     }
   }
 
-  const missingDateIndex = preparedPhotos.findIndex((photo) => !photo.takenAt)
-  const photoAwaitingDate = missingDateIndex >= 0 ? preparedPhotos[missingDateIndex] : null
+  const missingMetadataIndex = preparedPhotos.findIndex((photo) => !photo.takenAt || !photo.academicYear)
+  const photoAwaitingMetadata = missingMetadataIndex >= 0 ? preparedPhotos[missingMetadataIndex] : null
 
   const confirmTakenDate = () => {
     if (!isValidTakenAt(takenDateInput)) {
       setTakenDateError('请选择有效的拍摄日期。')
       return
     }
-    if (!photoAwaitingDate) return
+    if (!academicYearInput) {
+      setTakenDateError('请选择这张照片所属的大学阶段。')
+      return
+    }
+    if (!photoAwaitingMetadata) return
 
     const updatedPhotos = preparedPhotos.map((photo, index) => (
-      index === missingDateIndex ? { ...photo, takenAt: takenDateInput } : photo
+      index === missingMetadataIndex
+        ? { ...photo, takenAt: takenDateInput, academicYear: academicYearInput }
+        : photo
     ))
     setTakenDateInput('')
+    setAcademicYearInput('')
     setTakenDateError(null)
-    if (updatedPhotos.some((photo) => !photo.takenAt)) {
+    if (updatedPhotos.some((photo) => !photo.takenAt || !photo.academicYear)) {
       setPreparedPhotos(updatedPhotos)
     } else {
       beginCropping(updatedPhotos)
@@ -224,17 +182,18 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
   }
 
   const cancelTakenDate = () => {
-    if (!photoAwaitingDate) return
-    URL.revokeObjectURL(photoAwaitingDate.imageSrc)
-    const remainingPhotos = preparedPhotos.filter((_, index) => index !== missingDateIndex)
+    if (!photoAwaitingMetadata) return
+    URL.revokeObjectURL(photoAwaitingMetadata.imageSrc)
+    const remainingPhotos = preparedPhotos.filter((_, index) => index !== missingMetadataIndex)
     setTakenDateInput('')
+    setAcademicYearInput('')
     setTakenDateError(null)
 
     if (remainingPhotos.length === 0) {
       setPreparedPhotos([])
       setUploadStage('idle')
       setFeedback({ kind: 'info', text: '已取消这张照片，原始照片没有被保存。' })
-    } else if (remainingPhotos.some((photo) => !photo.takenAt)) {
+    } else if (remainingPhotos.some((photo) => !photo.takenAt || !photo.academicYear)) {
       setPreparedPhotos(remainingPhotos)
     } else {
       beginCropping(remainingPhotos)
@@ -254,6 +213,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
     const currentPhoto = pendingPhotos[0]
     const remainingPhotos = pendingPhotos.slice(1)
     if (currentPhoto?.takenAt) rememberTakenAt(file, currentPhoto.takenAt)
+    if (currentPhoto?.academicYear) rememberAcademicYear(file, currentPhoto.academicYear)
     const readyFiles = [...croppedFiles, file]
     if (currentPhoto) URL.revokeObjectURL(currentPhoto.imageSrc)
 
@@ -308,49 +268,59 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
   const isConfirmingDeletion = Boolean(
     photoPendingDeletion && deletingIds.includes(photoPendingDeletion.id),
   )
+  const schemaBlocksUpload = academicYearSchemaStatus !== 'ready'
+  const schemaMessage = academicYearSchemaStatus === 'missing'
+    ? '共同相册尚未启用 academic_year 字段。请在 Supabase SQL Editor 执行 supabase/add_academic_year.sql。为避免大学阶段选择丢失，上传已暂停。'
+    : academicYearSchemaStatus === 'unavailable'
+      ? '暂时无法确认共同相册的数据库结构。为保护照片归档信息，上传已暂停，请稍后刷新重试。'
+      : academicYearSchemaStatus === 'checking'
+        ? '正在确认共同相册的数据库结构…'
+        : null
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
           key="photo-manager"
-          className="fixed inset-0 z-[90] flex items-end justify-center bg-black/35 p-0 backdrop-blur-[2px] sm:items-center sm:p-6 dark:bg-black/60"
+          className="fixed inset-0 z-[90] flex items-end justify-center bg-black/30 p-0 backdrop-blur-md sm:items-center sm:p-6 dark:bg-black/58"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.22 }}
+          transition={{ duration: 0.25, ease: appleEaseOut }}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !photoPendingDeletion && processingFiles.length === 0 && pendingPhotos.length === 0 && preparedPhotos.length === 0) onClose()
           }}
           role="presentation"
         >
           <motion.section
-            className="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[26px] border border-black/[0.08] bg-[#f8f8f6] shadow-[0_30px_90px_rgba(0,0,0,0.2)] dark:border-white/[0.1] dark:bg-[#151515] dark:shadow-[0_30px_100px_rgba(0,0,0,0.6)] sm:rounded-[26px]"
-            initial={{ opacity: 0, y: 24, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.99 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="apple-modal-shell flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden !rounded-b-none !rounded-t-[30px] sm:max-h-[88dvh] sm:!rounded-[30px]"
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(22px) scale(0.985)' }}
+            animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(16px) scale(0.99)' }}
+            transition={{ duration: 0.28, ease: appleEaseOut }}
             role="dialog"
             aria-modal="true"
             aria-labelledby="photo-manager-title"
+            data-motion-transform="true"
           >
-            <header className="flex items-start justify-between border-b border-black/[0.07] px-5 py-5 dark:border-white/[0.08] sm:px-7 sm:py-6">
+            <span className="mx-auto mt-2.5 h-1 w-9 rounded-full bg-[var(--separator-strong)] sm:hidden" aria-hidden="true" />
+            <header className="flex items-start justify-between px-5 pb-5 pt-4 sm:px-7 sm:pb-5 sm:pt-7">
               <div>
-                <p className="mb-2 text-[9px] font-semibold tracking-[0.23em] text-neutral-400 dark:text-neutral-500">共同数字相册</p>
-                <h2 id="photo-manager-title" className="text-xl font-medium tracking-[-0.035em] sm:text-2xl">留下新的回忆</h2>
+                <p className="apple-kicker mb-2">共同数字相册</p>
+                <h2 id="photo-manager-title" className="text-xl font-semibold tracking-[-0.04em] sm:text-2xl">留下新的回忆</h2>
               </div>
               <button
                 type="button"
                 onClick={onClose}
                 disabled={processingFiles.length > 0 || pendingPhotos.length > 0 || preparedPhotos.length > 0 || Boolean(photoPendingDeletion)}
-                className="grid size-10 place-items-center rounded-full border border-black/10 bg-white/60 text-lg text-neutral-600 transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-40 dark:border-white/15 dark:bg-white/[0.04] dark:text-neutral-300 dark:hover:bg-white/[0.09]"
+                className="apple-toolbar-button disabled:cursor-wait disabled:opacity-40"
                 aria-label="关闭照片管理"
               >
-                ×
+                <svg className="size-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" /></svg>
               </button>
             </header>
 
-            <div className="overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+            <div className="photo-manager-scroll overflow-y-auto px-5 pb-6 pt-2 sm:px-7 sm:pb-7 sm:pt-3">
               <input
                 ref={inputRef}
                 type="file"
@@ -362,22 +332,42 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
                 data-photo-upload-input
               />
 
+              <AnimatePresence initial={false}>
+                {schemaMessage && (
+                  <motion.div
+                    key={academicYearSchemaStatus}
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(5px)' }}
+                    animate={{ opacity: 1, transform: 'translateY(0px)' }}
+                    exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(-3px)' }}
+                    transition={{ duration: 0.22, ease: appleEaseOut }}
+                    className={`mb-4 rounded-[18px] px-4 py-3.5 text-[11px] leading-5 ${academicYearSchemaStatus === 'missing' ? 'bg-amber-500/[0.1] text-amber-900 dark:text-amber-100' : 'liquid-glass-surface text-[var(--text-secondary)]'}`}
+                    role={academicYearSchemaStatus === 'missing' ? 'alert' : 'status'}
+                    data-motion-transform="true"
+                  >
+                    <p className="font-semibold">{academicYearSchemaStatus === 'missing' ? '需要完成一次数据库迁移' : '正在保护照片归档信息'}</p>
+                    <p className="mt-1 text-[10px] opacity-80">{schemaMessage}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <button
                 type="button"
                 onClick={choosePhotos}
-                disabled={isLoading || processingFiles.length > 0 || pendingPhotos.length > 0 || preparedPhotos.length > 0 || Boolean(storageError)}
-                className="flex min-h-20 w-full items-center justify-between rounded-[18px] border border-dashed border-black/15 bg-white/45 px-5 py-5 text-left transition-colors hover:border-black/30 hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:bg-white/[0.025] dark:hover:border-white/25 dark:hover:bg-white/[0.055] sm:px-6 sm:py-6"
+                disabled={isLoading || schemaBlocksUpload || processingFiles.length > 0 || pendingPhotos.length > 0 || preparedPhotos.length > 0 || Boolean(storageError)}
+                className="photo-upload-target liquid-glass-surface flex min-h-24 w-full items-center justify-between rounded-[22px] px-5 py-5 text-left disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:py-6"
               >
                 <span>
-                  <span className="block text-sm font-medium">上传照片</span>
-                  <span className="mt-1.5 block text-xs text-neutral-400 dark:text-neutral-500">{isLoading ? '正在取回共同回忆…' : '支持 JPG、PNG、WebP · 单张不超过 10 MB'}</span>
+                  <span className="block text-sm font-semibold tracking-[-0.01em]">选择照片</span>
+                  <span className="apple-tertiary-text mt-1.5 block text-xs">{isLoading ? '正在取回共同回忆…' : schemaBlocksUpload ? '需要先确认共同相册配置' : '自动识别 3:4、16:9、1:1 · 单张不超过 10 MB'}</span>
                 </span>
-                <span className="grid size-10 place-items-center rounded-full bg-neutral-900 text-lg text-white dark:bg-neutral-100 dark:text-neutral-900" aria-hidden="true">＋</span>
+                <span className="grid size-11 place-items-center rounded-full bg-[var(--page-fg)] text-[var(--page-bg)] shadow-sm" aria-hidden="true">
+                  <svg className="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                </span>
               </button>
 
               <AnimatePresence initial={false}>
                 {uploadStage !== 'idle' && (
-                  <UploadProgress
+                  <MemorySaveProgress
                     stage={uploadStage}
                     count={uploadStage === 'success' ? completedUploadCount : Math.max(processingFiles.length, cropTotal, 1)}
                   />
@@ -388,27 +378,28 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
                 {(feedback || storageError) && (
                   <motion.p
                     key={storageError ?? `${feedback?.kind}-${feedback?.text}`}
-                    initial={{ opacity: 0, y: 6, scale: 0.99 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={feedback?.kind === 'removed' ? { type: 'spring', stiffness: 220, damping: 23 } : { duration: 0.25 }}
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(5px) scale(0.99)' }}
+                    animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(-3px) scale(0.99)' }}
+                    transition={feedback?.kind === 'removed' ? appleSpring : { duration: 0.22, ease: appleEaseOut }}
                     className={`mt-4 rounded-xl px-4 py-3 text-xs leading-5 ${storageError || feedback?.kind === 'error'
                       ? 'bg-amber-500/[0.08] text-amber-800 dark:text-amber-200'
-                      : 'bg-black/[0.035] text-neutral-600 dark:bg-white/[0.05] dark:text-neutral-300'}`}
+                      : 'bg-[var(--surface-muted)] text-[var(--text-secondary)]'}`}
                     role="status"
                     aria-live="polite"
+                    data-motion-transform="true"
                   >
                     {storageError ?? feedback?.text}
                   </motion.p>
                 )}
               </AnimatePresence>
 
-              <div className="mb-4 mt-8 flex items-end justify-between">
+              <div className="mb-4 mt-9 flex items-end justify-between">
                 <div>
-                  <h3 className="text-sm font-medium">已经留下的回忆</h3>
-                  <p className="mt-1 text-[11px] text-neutral-400 dark:text-neutral-500">每一次上传，都会与来到这里的人共享。</p>
+                  <h3 className="text-sm font-semibold">已经留下的回忆</h3>
+                  <p className="apple-tertiary-text mt-1 text-[11px]">每一次上传，都会与来到这里的人共享。</p>
                 </div>
-                <span className="text-[11px] tabular-nums text-neutral-400">{String(photos.length).padStart(2, '0')}</span>
+                <span className="apple-tertiary-text text-[11px] tabular-nums">{String(photos.length).padStart(2, '0')}</span>
               </div>
 
               {isLoading ? (
@@ -432,22 +423,23 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
                         <motion.div
                           key={photo.id}
                           layout
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: deleting ? 0.45 : 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.92 }}
-                          className="group relative aspect-[3/4] overflow-hidden rounded-[14px] bg-neutral-200 dark:bg-neutral-800"
+                          initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.96)' }}
+                          animate={{ opacity: deleting ? 0.45 : 1, transform: 'scale(1)' }}
+                          exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'scale(0.96)' }}
+                          className="group relative aspect-[3/4] overflow-hidden rounded-[15px] bg-[var(--surface-muted)] shadow-[var(--shadow-small)]"
+                          data-motion-transform="true"
                         >
                           <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
                           <button
                             type="button"
                             onClick={() => requestPhotoDeletion(photo)}
                             disabled={deleting}
-                            className="absolute right-1.5 top-1.5 grid size-10 place-items-center rounded-full border border-white/20 bg-black/55 text-base text-white backdrop-blur-md transition-colors hover:bg-black/75 disabled:cursor-wait sm:size-8 sm:text-sm"
+                            className="absolute right-1.5 top-1.5 grid size-11 place-items-center rounded-full bg-black/48 text-white shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.26)] backdrop-blur-xl transition-colors duration-[180ms] hover:bg-black/70 disabled:cursor-wait sm:size-9"
                             aria-label={`删除照片：${photo.title}`}
                           >
-                            {deleting ? '·' : '×'}
+                            {deleting ? '·' : <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" /></svg>}
                           </button>
-                          <p className="absolute inset-x-0 bottom-0 truncate bg-black/35 px-2.5 py-2 text-[9px] text-white/90 backdrop-blur-sm">
+                          <p className="absolute inset-x-0 bottom-0 truncate bg-black/32 px-2.5 py-2 text-[9px] font-medium text-white/90 backdrop-blur-xl">
                             {photo.takenAt ? `拍摄于 ${formatTakenAt(photo.takenAt)}` : '拍摄时间未知'}
                           </p>
                         </motion.div>
@@ -456,20 +448,20 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="rounded-[18px] border border-black/[0.06] px-5 py-9 text-center dark:border-white/[0.07]">
-                  <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-300">这里还没有共同回忆，<br />上传第一张照片吧。</p>
+                <div className="rounded-[20px] bg-[var(--surface-muted)] px-5 py-9 text-center">
+                  <p className="apple-secondary-text text-sm leading-6">这里还没有共同回忆，<br />上传第一张照片吧。</p>
                   <button
                     type="button"
                     onClick={choosePhotos}
-                    disabled={Boolean(storageError)}
-                    className="mt-5 min-h-11 rounded-full bg-neutral-900 px-5 py-2.5 text-xs font-medium text-white transition-transform hover:scale-[1.015] active:scale-[0.985] disabled:opacity-40 dark:bg-neutral-100 dark:text-neutral-900"
+                    disabled={Boolean(storageError) || schemaBlocksUpload}
+                    className="apple-primary-button mt-5 !min-h-11 !px-5 !text-xs disabled:opacity-40"
                   >
                     上传第一张照片
                   </button>
                 </div>
               )}
 
-              <p className="mt-6 text-[10px] leading-5 text-neutral-400 dark:text-neutral-600">
+              <p className="apple-tertiary-text mt-6 text-[10px] leading-5">
                 这里的照片属于共同相册。删除前，我们会再次向你确认。
               </p>
             </div>
@@ -484,17 +476,23 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, onClose,
           current={cropTotal - pendingPhotos.length + 1}
           total={cropTotal}
           isNearTargetRatio={pendingPhotos[0].isNearTargetRatio}
+          aspectPreset={pendingPhotos[0].aspectPreset}
           onCancel={cancelCropping}
           onConfirm={confirmCroppedPhoto}
         />
       )}
       <TakenDateModal
-        isOpen={isOpen && Boolean(photoAwaitingDate)}
-        filename={photoAwaitingDate?.file.name ?? ''}
+        isOpen={isOpen && Boolean(photoAwaitingMetadata)}
+        filename={photoAwaitingMetadata?.file.name ?? ''}
         value={takenDateInput}
+        academicYear={academicYearInput}
         error={takenDateError}
         onChange={(value) => {
           setTakenDateInput(value)
+          setTakenDateError(null)
+        }}
+        onAcademicYearChange={(value) => {
+          setAcademicYearInput(value)
           setTakenDateError(null)
         }}
         onCancel={cancelTakenDate}

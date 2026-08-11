@@ -1,5 +1,6 @@
 import type { Photo } from '../data/photos'
-import { formatTakenAt, getRememberedTakenAt } from '../lib/photoTakenAt'
+import type { AcademicYearId } from '../data/academicYears'
+import { formatTakenAt, getRememberedAcademicYear, getRememberedTakenAt } from '../lib/photoTakenAt'
 import { getSupabaseClient } from '../lib/supabase'
 import { maximumPhotoSize, type PhotoStorage, validatePhotoFile } from './PhotoStorage'
 
@@ -10,6 +11,7 @@ interface PhotoRecord {
   location: string | null
   date: string | null
   taken_at: string | null
+  academic_year?: string | null
   created_at: string
   storage_path: string
 }
@@ -20,12 +22,29 @@ interface UploadedRecord {
 }
 
 const bucketName = 'memory-photos'
-const selectedColumns = 'id, url, title, location, date, taken_at, created_at, storage_path'
+const selectedColumns = 'id, url, title, location, date, taken_at, academic_year, created_at, storage_path'
+const legacySelectedColumns = 'id, url, title, location, date, taken_at, created_at, storage_path'
 const accentPalette = ['#c7d4e7', '#d8c8b8', '#bdcbb8', '#d7c0c7', '#b7c9c8', '#ccbca7']
 
 function accentForId(id: string) {
   const index = Array.from(id).reduce((sum, character) => sum + character.charCodeAt(0), 0) % accentPalette.length
   return accentPalette[index]
+}
+
+function isAcademicYearId(value: unknown): value is AcademicYearId {
+  return value === 'freshman' || value === 'sophomore' || value === 'junior' || value === 'senior'
+}
+
+function isMissingAcademicYearColumn(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const code = 'code' in error ? String(error.code) : ''
+  const message = 'message' in error ? String(error.message).toLowerCase() : ''
+  return message.includes('academic_year') && (
+    code === '42703'
+    || code === 'PGRST204'
+    || message.includes('does not exist')
+    || message.includes('schema cache')
+  )
 }
 
 function toPhoto(record: PhotoRecord): Photo {
@@ -42,6 +61,7 @@ function toPhoto(record: PhotoRecord): Photo {
     gridAspect: 3 / 4,
     source: 'supabase',
     takenAt: record.taken_at ?? undefined,
+    academicYear: isAcademicYearId(record.academic_year) ? record.academic_year : undefined,
   }
 }
 
@@ -64,14 +84,25 @@ export class SupabasePhotoStorage implements PhotoStorage {
 
   async getPhotos() {
     const client = getSupabaseClient()
-    const { data, error } = await client
+    const result = await client
       .from('photos')
       .select(selectedColumns)
       .order('created_at', { ascending: false })
 
-    if (error) throw new Error(readableError('共享图库加载失败', error))
+    if (isMissingAcademicYearColumn(result.error)) {
+      const legacyResult = await client
+        .from('photos')
+        .select(legacySelectedColumns)
+        .order('created_at', { ascending: false })
+      if (legacyResult.error) throw new Error(readableError('共享图库加载失败', legacyResult.error))
+      const legacyRecords = (legacyResult.data ?? []) as PhotoRecord[]
+      legacyRecords.forEach((record) => this.storagePaths.set(record.id, record.storage_path))
+      return legacyRecords.map(toPhoto)
+    }
 
-    const records = (data ?? []) as PhotoRecord[]
+    if (result.error) throw new Error(readableError('共享图库加载失败', result.error))
+
+    const records = (result.data ?? []) as PhotoRecord[]
     records.forEach((record) => this.storagePaths.set(record.id, record.storage_path))
     return records.map(toPhoto)
   }
@@ -90,6 +121,8 @@ export class SupabasePhotoStorage implements PhotoStorage {
       for (const file of files) {
         const takenAt = getRememberedTakenAt(file)
         if (!takenAt) throw new Error('请先确认照片的拍摄时间。')
+        const academicYear = getRememberedAcademicYear(file)
+        if (!academicYear) throw new Error('请先选择照片所属的大学阶段。')
         const storagePath = storagePathFor()
         const { error: storageError } = await client.storage
           .from(bucketName)
@@ -102,7 +135,7 @@ export class SupabasePhotoStorage implements PhotoStorage {
         if (storageError) throw new Error(readableError(`“${file.name}”上传到 Storage 失败`, storageError))
 
         const { data: publicUrlData } = client.storage.from(bucketName).getPublicUrl(storagePath)
-        const { data: insertedData, error: databaseError } = await client
+        const modernInsert = await client
           .from('photos')
           .insert({
             url: publicUrlData.publicUrl,
@@ -110,10 +143,31 @@ export class SupabasePhotoStorage implements PhotoStorage {
             location: null,
             date: null,
             taken_at: takenAt,
+            academic_year: academicYear,
             storage_path: storagePath,
           })
           .select(selectedColumns)
           .single()
+
+        let insertedData = modernInsert.data as PhotoRecord | null
+        let databaseError: unknown = modernInsert.error
+
+        if (isMissingAcademicYearColumn(modernInsert.error)) {
+          const legacyInsert = await client
+            .from('photos')
+            .insert({
+              url: publicUrlData.publicUrl,
+              title: '未命名回忆',
+              location: null,
+              date: null,
+              taken_at: takenAt,
+              storage_path: storagePath,
+            })
+            .select(legacySelectedColumns)
+            .single()
+          insertedData = legacyInsert.data as PhotoRecord | null
+          databaseError = legacyInsert.error
+        }
 
         if (databaseError || !insertedData) {
           const { error: cleanupError } = await client.storage.from(bucketName).remove([storagePath])

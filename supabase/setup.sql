@@ -10,6 +10,7 @@ create table if not exists public.photos (
   location text,
   date text,
   taken_at date,
+  academic_year text,
   created_at timestamptz not null default now(),
   storage_path text not null unique
 );
@@ -17,6 +18,26 @@ create table if not exists public.photos (
 -- 兼容已经创建过 photos 表的项目。
 alter table public.photos
   add column if not exists taken_at date;
+
+alter table public.photos
+  add column if not exists academic_year text;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'photos_academic_year_check'
+      and conrelid = 'public.photos'::regclass
+  ) then
+    alter table public.photos
+      add constraint photos_academic_year_check
+      check (
+        academic_year is null
+        or academic_year in ('freshman', 'sophomore', 'junior', 'senior')
+      );
+  end if;
+end $$;
 
 create index if not exists photos_created_at_idx
   on public.photos (created_at desc);

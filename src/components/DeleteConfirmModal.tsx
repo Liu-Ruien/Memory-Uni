@@ -1,6 +1,7 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import type { Photo } from '../data/photos'
+import { appleEaseOut } from '../design/motion'
 
 interface DeleteConfirmModalProps {
   isOpen: boolean
@@ -18,6 +19,7 @@ export function DeleteConfirmModal({
   onConfirm,
 }: DeleteConfirmModalProps) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
+  const reduceMotion = useReducedMotion()
 
   useEffect(() => {
     if (!isOpen) return
@@ -33,36 +35,37 @@ export function DeleteConfirmModal({
     <AnimatePresence>
       {isOpen && photo && (
         <motion.div
-          className="fixed inset-0 z-[130] flex items-center justify-center bg-black/45 px-5 py-8 backdrop-blur-[3px] dark:bg-black/65"
+          className="fixed inset-0 z-[130] flex items-center justify-center bg-black/34 px-5 py-8 backdrop-blur-lg dark:bg-black/66"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.22, ease: 'easeOut' }}
+          transition={{ duration: 0.25, ease: appleEaseOut }}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !isDeleting) onCancel()
           }}
           role="presentation"
         >
           <motion.section
-            className="w-full max-w-[390px] rounded-[26px] border border-white/45 bg-[#f8f8f6]/95 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.24)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-[#171717]/95 dark:shadow-[0_32px_100px_rgba(0,0,0,0.62)] sm:p-7"
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 6 }}
-            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="apple-modal-shell w-full max-w-[390px] p-6 sm:p-7"
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'scale(0.96)' }}
+            animate={{ opacity: 1, transform: 'scale(1)' }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'scale(0.96)' }}
+            transition={{ duration: 0.25, ease: appleEaseOut }}
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="delete-confirm-title"
             aria-describedby="delete-confirm-description"
+            data-motion-transform="true"
           >
             <div className="flex items-start gap-4">
-              <div className="aspect-[3/4] w-14 shrink-0 overflow-hidden rounded-[12px] bg-neutral-200 ring-1 ring-black/[0.06] dark:bg-neutral-800 dark:ring-white/[0.08]">
+              <div className="aspect-[3/4] w-14 shrink-0 overflow-hidden rounded-[13px] bg-[var(--surface-muted)] shadow-[var(--shadow-small)]">
                 <img src={photo.src} alt="" className="h-full w-full object-cover" aria-hidden="true" />
               </div>
               <div className="min-w-0 pt-1">
-                <h2 id="delete-confirm-title" className="text-xl font-medium tracking-[-0.035em] text-neutral-900 dark:text-neutral-100">
+                <h2 id="delete-confirm-title" className="text-xl font-semibold tracking-[-0.04em]">
                   删除这张回忆？
                 </h2>
-                <p id="delete-confirm-description" className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+                <p id="delete-confirm-description" className="apple-secondary-text mt-2 text-sm leading-6">
                   删除后，所有人都无法再看到这张照片。
                 </p>
               </div>
@@ -74,7 +77,7 @@ export function DeleteConfirmModal({
                 type="button"
                 onClick={onCancel}
                 disabled={isDeleting}
-                className="min-h-11 rounded-full border border-black/10 bg-white/55 px-5 text-sm font-medium text-neutral-700 transition-colors hover:bg-white disabled:cursor-wait disabled:opacity-45 dark:border-white/[0.12] dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-white/[0.08]"
+                className="apple-secondary-button disabled:cursor-wait disabled:opacity-45"
               >
                 取消
               </button>
@@ -82,7 +85,7 @@ export function DeleteConfirmModal({
                 type="button"
                 onClick={() => void onConfirm()}
                 disabled={isDeleting}
-                className="min-h-11 rounded-full bg-[#c64f47] px-5 text-sm font-medium text-white shadow-sm transition-transform hover:scale-[1.01] hover:bg-[#b94740] active:scale-[0.985] disabled:cursor-wait disabled:opacity-60"
+                className="apple-danger-button disabled:cursor-wait disabled:opacity-60"
               >
                 {isDeleting ? '正在删除…' : '删除'}
               </button>

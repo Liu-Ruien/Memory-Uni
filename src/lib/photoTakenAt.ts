@@ -1,4 +1,7 @@
+import type { AcademicYearId } from '../data/academicYears'
+
 const takenAtByFile = new WeakMap<File, string>()
+const academicYearByFile = new WeakMap<File, AcademicYearId>()
 
 function toDateInputValue(value: unknown): string | null {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
@@ -39,4 +42,12 @@ export function rememberTakenAt(file: File, takenAt: string) {
 
 export function getRememberedTakenAt(file: File) {
   return takenAtByFile.get(file)
+}
+
+export function rememberAcademicYear(file: File, academicYear: AcademicYearId) {
+  academicYearByFile.set(file, academicYear)
+}
+
+export function getRememberedAcademicYear(file: File) {
+  return academicYearByFile.get(file)
 }

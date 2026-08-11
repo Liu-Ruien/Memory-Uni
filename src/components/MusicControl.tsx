@@ -106,19 +106,21 @@ export function MusicControl() {
         type="button"
         data-music-control
         onClick={togglePlayback}
-        className={`relative grid size-10 place-items-center rounded-full border text-[15px] transition-colors duration-300 ${
+        className={`apple-toolbar-button relative ${
           playbackError
-            ? 'border-red-300/50 bg-red-50/50 text-red-500 dark:border-red-400/20 dark:bg-red-400/[0.06] dark:text-red-300'
-            : 'border-black/10 bg-white/45 text-neutral-800 hover:bg-white/80 dark:border-white/15 dark:bg-white/[0.04] dark:text-neutral-100 dark:hover:bg-white/[0.09]'
+            ? '!bg-red-500/[0.1] !text-red-500 dark:!text-red-300'
+            : ''
         }`}
         aria-label={label}
         aria-pressed={isPlaying}
         title={playbackError ? `请检查音频文件：${musicConfig.src}` : `${label}：${musicConfig.title}`}
       >
-        <span aria-hidden="true" className={`leading-none transition-opacity ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}>
-          {isPlaying ? '♫' : '♪'}
-        </span>
-        {isPlaying && <span className="absolute bottom-1.5 right-1.5 size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />}
+        <svg className={`size-[17px] transition-opacity duration-[180ms] ${isTransitioning ? 'opacity-45' : 'opacity-100'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M9 18V5l10-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="16" cy="16" r="3" />
+        </svg>
+        {isPlaying && <span className="absolute bottom-[7px] right-[7px] size-1.5 rounded-full bg-[#30d158] shadow-[0_0_0_2px_var(--surface-strong)]" aria-hidden="true" />}
       </button>
     </>
   )

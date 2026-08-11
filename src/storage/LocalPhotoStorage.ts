@@ -1,4 +1,6 @@
 import type { Photo } from '../data/photos'
+import type { AcademicYearId } from '../data/academicYears'
+import { getRememberedAcademicYear, getRememberedTakenAt } from '../lib/photoTakenAt'
 import { maximumPhotoSize, type PhotoStorage, validatePhotoFile } from './PhotoStorage'
 
 interface StoredPhoto {
@@ -12,6 +14,8 @@ interface StoredPhoto {
   accentColor: string
   gridAspect: number
   createdAt: number
+  takenAt?: string
+  academicYear?: AcademicYearId
 }
 
 const databaseName = 'my-archive-local-photos'
@@ -136,6 +140,8 @@ export class LocalPhotoStorage implements PhotoStorage {
       accentColor: record.accentColor,
       gridAspect: record.gridAspect,
       source: 'local',
+      takenAt: record.takenAt,
+      academicYear: record.academicYear,
     }
   }
 
@@ -157,6 +163,8 @@ export class LocalPhotoStorage implements PhotoStorage {
     for (const [index, file] of files.entries()) {
       const processed = await optimisePhoto(file)
       const createdAt = Date.now() + index
+      const takenAt = getRememberedTakenAt(file)
+      const academicYear = getRememberedAcademicYear(file)
       const id = `local-${typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${createdAt}-${Math.random().toString(16).slice(2)}`}`
       const record: StoredPhoto = {
         id,
@@ -169,6 +177,8 @@ export class LocalPhotoStorage implements PhotoStorage {
         accentColor: accentPalette[(createdAt + index) % accentPalette.length],
         gridAspect: targetAspect,
         createdAt,
+        takenAt,
+        academicYear,
       }
 
       const transaction = database.transaction(storeName, 'readwrite')

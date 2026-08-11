@@ -1,6 +1,16 @@
 import { gsap } from 'gsap'
 import { Mesh, Program, Renderer, Texture, Triangle, type OGLRenderingContext } from 'ogl'
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import './MorphSlider.css'
 
 export interface MorphSliderItem {
@@ -18,8 +28,16 @@ interface MorphSliderProps {
   aberration?: number
   drift?: number
   radius?: number
+  showControls?: boolean
   onIndexChange?: (index: number) => void
   onClose?: () => void
+}
+
+export interface MorphSliderHandle {
+  next: () => void
+  previous: () => void
+  goTo: (index: number) => void
+  refreshSize: () => void
 }
 
 interface MorphEngine {
@@ -30,6 +48,7 @@ interface MorphEngine {
   beginDrag: () => boolean
   drag: (distance: number) => void
   endDrag: () => void
+  resize: () => void
   destroy: () => void
 }
 
@@ -282,8 +301,7 @@ function createMorphEngine(
   })
 
   const resize = () => {
-    const bounds = container.getBoundingClientRect()
-    renderer.setSize(Math.max(bounds.width, 1), Math.max(bounds.height, 1))
+    renderer.setSize(Math.max(container.clientWidth, 1), Math.max(container.clientHeight, 1))
     resolution.value = [canvas.width, canvas.height]
   }
   const resizeObserver = new ResizeObserver(resize)
@@ -395,6 +413,7 @@ function createMorphEngine(
     beginDrag,
     drag,
     endDrag,
+    resize,
     destroy: () => {
       window.cancelAnimationFrame(frame)
       tween?.kill()
@@ -410,7 +429,7 @@ function createMorphEngine(
   }
 }
 
-export function MorphSlider({
+export const MorphSlider = forwardRef<MorphSliderHandle, MorphSliderProps>(function MorphSlider({
   items,
   startIndex = 0,
   transition = 'melt',
@@ -419,9 +438,10 @@ export function MorphSlider({
   aberration = 0.24,
   drift = 0.25,
   radius = 18,
+  showControls = true,
   onIndexChange,
   onClose,
-}: MorphSliderProps) {
+}, ref) {
   const stageRef = useRef<HTMLDivElement>(null)
   const engineRef = useRef<MorphEngine | null>(null)
   const initialIndexRef = useRef(startIndex)
@@ -457,6 +477,18 @@ export function MorphSlider({
     if (engineRef.current) engineRef.current.previous()
     else fallbackGoTo(index - 1)
   }, [fallbackGoTo, index])
+
+  const goTo = useCallback((itemIndex: number) => {
+    if (engineRef.current) engineRef.current.goTo(itemIndex)
+    else fallbackGoTo(itemIndex)
+  }, [fallbackGoTo])
+
+  useImperativeHandle(ref, () => ({
+    next,
+    previous,
+    goTo,
+    refreshSize: () => engineRef.current?.resize(),
+  }), [goTo, next, previous])
 
   useEffect(() => {
     const stage = stageRef.current
@@ -570,31 +602,36 @@ export function MorphSlider({
         draggable={false}
       />
 
-      <div className="morph-slider-controls">
-        <button type="button" className="morph-slider-button" onClick={previous} aria-label="上一张照片">
-          ←
-        </button>
-        <button type="button" className="morph-slider-button" onClick={next} aria-label="下一张照片">
-          →
-        </button>
-      </div>
+      {showControls && (
+        <>
+          <div className="morph-slider-controls">
+            <button type="button" className="morph-slider-button" onClick={previous} aria-label="上一张照片">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="m14.5 6-6 6 6 6" />
+              </svg>
+            </button>
+            <button type="button" className="morph-slider-button" onClick={next} aria-label="下一张照片">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="m9.5 6 6 6-6 6" />
+              </svg>
+            </button>
+          </div>
 
-      <div className="morph-slider-indicators" role="tablist" aria-label="照片列表">
-        {items.map((item, itemIndex) => (
-          <button
-            key={item.image}
-            type="button"
-            role="tab"
-            aria-selected={itemIndex === index}
-            aria-label={`查看第 ${itemIndex + 1} 张照片`}
-            className={`morph-slider-dot ${itemIndex === index ? 'is-active' : ''}`}
-            onClick={() => {
-              if (engineRef.current) engineRef.current.goTo(itemIndex)
-              else fallbackGoTo(itemIndex)
-            }}
-          />
-        ))}
-      </div>
+          <div className="morph-slider-indicators" role="tablist" aria-label="照片列表">
+            {items.map((item, itemIndex) => (
+              <button
+                key={item.image}
+                type="button"
+                role="tab"
+                aria-selected={itemIndex === index}
+                aria-label={`查看第 ${itemIndex + 1} 张照片`}
+                className={`morph-slider-dot ${itemIndex === index ? 'is-active' : ''}`}
+                onClick={() => goTo(itemIndex)}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
-}
+})

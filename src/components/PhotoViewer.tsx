@@ -1,8 +1,18 @@
-import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo } from 'react'
+import {
+  AnimatePresence,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from 'framer-motion'
+import { useEffect, useMemo, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import type { Photo } from '../data/photos'
+import { appleEaseOut, appleGestureSpring } from '../design/motion'
+import { usePhotoPresentation } from '../hooks/usePhotoPresentation'
+import { useViewerFrameSize } from '../hooks/useViewerFrameSize'
 import { formatTakenAt } from '../lib/photoTakenAt'
-import { MorphSlider, type MorphSliderItem } from './MorphSlider'
+import { MorphSlider, type MorphSliderHandle, type MorphSliderItem } from './MorphSlider'
 
 interface PhotoViewerProps {
   photos: Photo[]
@@ -13,17 +23,46 @@ interface PhotoViewerProps {
 }
 
 export function PhotoViewer({ photos, activeIndex, isOpen, onClose, onActiveIndexChange }: PhotoViewerProps) {
+  const reduceMotion = useReducedMotion()
+  const photo = photos[activeIndex]
+  const presentation = usePhotoPresentation(
+    photo?.src ?? '',
+    photo?.accentColor ?? '#BFE8FF',
+    photo?.gridAspect ?? 3 / 4,
+  )
+  const frameSize = useViewerFrameSize(presentation.aspect, isOpen)
+  const sliderRef = useRef<MorphSliderHandle>(null)
+  const rotateX = useMotionValue(0)
+  const rotateY = useMotionValue(0)
+  const springRotateX = useSpring(rotateX, { stiffness: 170, damping: 24, mass: 0.75 })
+  const springRotateY = useSpring(rotateY, { stiffness: 170, damping: 24, mass: 0.75 })
+  const tiltTransform = useMotionTemplate`perspective(1200px) rotateX(${springRotateX}deg) rotateY(${springRotateY}deg) translateZ(0px)`
   const items = useMemo<MorphSliderItem[]>(
     () => photos.map((photo) => {
       const takenAt = formatTakenAt(photo.takenAt)
-      return {
-        image: photo.src,
-        alt: photo.alt,
-        caption: takenAt ? `拍摄于 ${takenAt}` : undefined,
-      }
+      return { image: photo.src, alt: photo.alt, caption: takenAt ? `拍摄于 ${takenAt}` : undefined }
     }),
     [photos],
   )
+
+  const resetTilt = () => {
+    rotateX.set(0)
+    rotateY.set(0)
+  }
+
+  const handleTilt = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (
+      reduceMotion
+      || event.pointerType !== 'mouse'
+      || !window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    ) return
+
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const normalizedX = ((event.clientX - bounds.left) / Math.max(bounds.width, 1) - 0.5) * 2
+    const normalizedY = ((event.clientY - bounds.top) / Math.max(bounds.height, 1) - 0.5) * 2
+    rotateX.set(Math.max(-3, Math.min(3, normalizedY * -3)))
+    rotateY.set(Math.max(-5, Math.min(5, normalizedX * 5)))
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -34,73 +73,163 @@ export function PhotoViewer({ photos, activeIndex, isOpen, onClose, onActiveInde
     }
   }, [isOpen])
 
-  const photo = photos[activeIndex]
+  useEffect(() => {
+    resetTilt()
+  }, [isOpen, photo?.id])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const frame = window.requestAnimationFrame(() => sliderRef.current?.refreshSize())
+    const settleTimer = window.setTimeout(() => sliderRef.current?.refreshSize(), 480)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(settleTimer)
+    }
+  }, [frameSize.height, frameSize.width, isOpen])
+
   const takenAt = formatTakenAt(photo?.takenAt)
-  const captionTitle = photo && photo.title !== '未命名回忆' ? photo.title : ''
+  const viewerStyle = {
+    '--viewer-photo-accent': presentation.accent,
+    '--viewer-photo-aspect': frameSize.aspect,
+  } as CSSProperties
 
   return (
     <AnimatePresence>
       {isOpen && photo && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/[0.96] px-3 pb-20 pt-16 text-white sm:px-10 sm:pb-24 sm:pt-20"
+          className="viewer-photo-space fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-2 pb-20 pt-16 text-white sm:px-8 sm:pb-20 sm:pt-20"
+          style={viewerStyle}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.28 }}
+          transition={{ duration: 0.25, ease: appleEaseOut }}
           onClick={onClose}
           role="dialog"
           aria-modal="true"
           aria-label={`沉浸式照片浏览：${photo.title}`}
         >
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-4 top-4 z-20 grid size-11 place-items-center rounded-full border border-white/15 bg-white/[0.07] text-xl text-white/90 backdrop-blur-md transition-colors hover:bg-white/[0.14] sm:right-7 sm:top-7"
-            aria-label="关闭照片浏览"
-          >
-            ×
-          </button>
-
-          <motion.div
-            className="relative h-full max-h-[820px] w-full max-w-[1380px] overflow-hidden rounded-[16px] border border-white/[0.08] bg-[#0b0b0d] shadow-[0_32px_100px_rgba(0,0,0,0.55)] sm:rounded-[22px]"
-            initial={{ opacity: 0, scale: 0.965, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.975, y: 8 }}
-            transition={{ type: 'spring', stiffness: 165, damping: 24, mass: 0.9 }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <MorphSlider
-              items={items}
-              startIndex={activeIndex}
-              transition="melt"
-              duration={1.05}
-              intensity={0.5}
-              aberration={0.24}
-              drift={0.22}
-              radius={18}
-              onIndexChange={onActiveIndexChange}
-              onClose={onClose}
-            />
-          </motion.div>
-
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             <motion.div
-              key={`viewer-caption-${photo.id}`}
-              className="pointer-events-none absolute inset-x-0 bottom-5 z-20 text-center sm:bottom-7"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.3 }}
+              key={`viewer-ambient-${photo.id}`}
+              className="pointer-events-none absolute inset-0 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0.18 : 0.25, ease: appleEaseOut }}
+              aria-hidden="true"
             >
-              {captionTitle && <p className="text-sm font-medium">{captionTitle}</p>}
-              <p className={`${captionTitle ? 'mt-1' : ''} text-xs tracking-[0.06em] text-white/50`}>
-                {takenAt ? `拍摄于 ${takenAt}` : '拍摄时间未知'}
-              </p>
+              <img
+                src={photo.src}
+                alt=""
+                className="viewer-photo-ambient pointer-events-none absolute object-cover"
+              />
             </motion.div>
           </AnimatePresence>
+          <div className="viewer-photo-atmosphere pointer-events-none absolute inset-0" aria-hidden="true" />
+          <div className="viewer-photo-vignette pointer-events-none absolute inset-0" aria-hidden="true" />
 
-          <div className="pointer-events-none absolute bottom-6 right-6 z-20 hidden text-[10px] tabular-nums tracking-[0.15em] text-white/35 sm:block">
-            {String(activeIndex + 1).padStart(2, '0')} / {String(photos.length).padStart(2, '0')}
+          <div className="absolute inset-x-3 top-3 z-30 flex items-center justify-between sm:inset-x-6 sm:top-5">
+            <button type="button" onClick={onClose} className="viewer-glass-control" aria-label="关闭照片浏览">
+              <svg className="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true">
+                <path d="m7 7 10 10M17 7 7 17" />
+              </svg>
+            </button>
+            <div className="viewer-glass-control min-w-[72px] px-3 text-[10px] font-semibold tabular-nums tracking-[0.1em] text-white/78" aria-label={`第 ${activeIndex + 1} 张，共 ${photos.length} 张`}>
+              {String(activeIndex + 1).padStart(2, '0')} / {String(photos.length).padStart(2, '0')}
+            </div>
+          </div>
+
+          <div
+            className="viewer-photo-layout relative z-10 flex flex-col items-center"
+            style={{ width: frameSize.width }}
+          >
+            <div
+              className="viewer-photo-hit-surface relative z-10"
+              style={{ width: frameSize.width, height: frameSize.height }}
+              onPointerMove={handleTilt}
+              onPointerLeave={resetTilt}
+              onPointerCancel={resetTilt}
+            >
+              <motion.div
+                className="viewer-photo-shell relative h-full w-full"
+                style={{ transform: tiltTransform }}
+                data-motion-transform="true"
+              >
+                <motion.div
+                  layoutId={`memory-photo-${photo.id}`}
+                  className="viewer-liquid-frame relative h-full w-full overflow-hidden rounded-[18px] sm:rounded-[28px]"
+                  initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'scale(0.975)' }}
+                  animate={{ opacity: 1, transform: 'scale(1)' }}
+                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'scale(0.985)' }}
+                  transition={{ layout: appleGestureSpring, opacity: { duration: 0.25, ease: appleEaseOut }, transform: appleGestureSpring }}
+                  onClick={(event) => event.stopPropagation()}
+                  data-motion-transform="true"
+                >
+                  <MorphSlider
+                    ref={sliderRef}
+                    items={items}
+                    startIndex={activeIndex}
+                    transition="melt"
+                    duration={1.05}
+                    intensity={0.5}
+                    aberration={0.24}
+                    drift={0.22}
+                    radius={28}
+                    showControls={false}
+                    onIndexChange={onActiveIndexChange}
+                    onClose={onClose}
+                  />
+
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`viewer-date-${photo.id}`}
+                      className="viewer-photo-date pointer-events-none absolute left-3 top-3 z-10 sm:left-4 sm:top-4"
+                      initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(-4px)' }}
+                      animate={{ opacity: 1, transform: 'translateY(0px)' }}
+                      exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(-3px)' }}
+                      transition={{ duration: 0.2, ease: appleEaseOut }}
+                      data-motion-transform="true"
+                    >
+                      {takenAt ? `拍摄于 ${takenAt}` : '拍摄时间未知'}
+                    </motion.div>
+                  </AnimatePresence>
+                </motion.div>
+              </motion.div>
+            </div>
+
+            {photos.length > 1 && (
+              <div
+                className="viewer-photo-navigation"
+                onClick={(event) => event.stopPropagation()}
+                aria-label="照片导航"
+              >
+                <button type="button" className="morph-slider-button" onClick={() => sliderRef.current?.previous()} aria-label="上一张照片">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m14.5 6-6 6 6 6" />
+                  </svg>
+                </button>
+
+                <div className="viewer-photo-navigation-indicators" role="tablist" aria-label="照片列表">
+                  {items.map((item, itemIndex) => (
+                    <button
+                      key={item.image}
+                      type="button"
+                      role="tab"
+                      aria-selected={itemIndex === activeIndex}
+                      aria-label={`查看第 ${itemIndex + 1} 张照片`}
+                      className={`morph-slider-dot ${itemIndex === activeIndex ? 'is-active' : ''}`}
+                      onClick={() => sliderRef.current?.goTo(itemIndex)}
+                    />
+                  ))}
+                </div>
+
+                <button type="button" className="morph-slider-button" onClick={() => sliderRef.current?.next()} aria-label="下一张照片">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m9.5 6 6 6-6 6" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       )}

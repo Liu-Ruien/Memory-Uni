@@ -1,12 +1,16 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef } from 'react'
+import { academicYears, type AcademicYearId } from '../data/academicYears'
+import { appleEaseOut } from '../design/motion'
 
 interface TakenDateModalProps {
   isOpen: boolean
   filename: string
   value: string
+  academicYear: AcademicYearId | ''
   error: string | null
   onChange: (value: string) => void
+  onAcademicYearChange: (value: AcademicYearId) => void
   onCancel: () => void
   onConfirm: () => void
 }
@@ -15,12 +19,15 @@ export function TakenDateModal({
   isOpen,
   filename,
   value,
+  academicYear,
   error,
   onChange,
+  onAcademicYearChange,
   onCancel,
   onConfirm,
 }: TakenDateModalProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const reduceMotion = useReducedMotion()
 
   useEffect(() => {
     if (!isOpen) return
@@ -39,22 +46,22 @@ export function TakenDateModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[120] grid place-items-end bg-black/45 p-0 backdrop-blur-[3px] sm:place-items-center sm:p-6 dark:bg-black/70"
+          className="fixed inset-0 z-[120] grid place-items-end bg-black/32 p-0 backdrop-blur-md sm:place-items-center sm:p-6 dark:bg-black/65"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.22 }}
+          transition={{ duration: 0.25, ease: appleEaseOut }}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) onCancel()
           }}
           role="presentation"
         >
           <motion.form
-            className="w-full max-w-md rounded-t-[26px] border border-black/[0.08] bg-[#f8f8f6] px-6 pb-6 pt-7 shadow-[0_28px_90px_rgba(0,0,0,0.24)] dark:border-white/[0.1] dark:bg-[#171717] sm:rounded-[26px] sm:px-8 sm:pb-8 sm:pt-8"
-            initial={{ opacity: 0, y: 18, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.98 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="apple-modal-shell w-full max-w-md !rounded-b-none !rounded-t-[30px] px-6 pb-6 pt-3 sm:!rounded-[30px] sm:px-8 sm:pb-8 sm:pt-8"
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(18px) scale(0.97)' }}
+            animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(12px) scale(0.98)' }}
+            transition={{ duration: 0.25, ease: appleEaseOut }}
             onSubmit={(event) => {
               event.preventDefault()
               onConfirm()
@@ -62,37 +69,62 @@ export function TakenDateModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="taken-date-title"
+            data-motion-transform="true"
           >
-            <p className="text-[9px] font-semibold tracking-[0.22em] text-neutral-400 dark:text-neutral-500">照片信息</p>
-            <h2 id="taken-date-title" className="mt-3 text-xl font-medium tracking-[-0.035em] sm:text-2xl">请输入照片拍摄时间</h2>
-            <p className="mt-3 truncate text-xs text-neutral-400 dark:text-neutral-500" title={filename}>这张照片没有可读取的 EXIF 拍摄时间。</p>
+            <span className="mx-auto mb-5 block h-1 w-9 rounded-full bg-[var(--separator-strong)] sm:hidden" aria-hidden="true" />
+            <p className="apple-kicker">步骤 3 / 5 · 确认信息</p>
+            <h2 id="taken-date-title" className="mt-3 text-xl font-semibold tracking-[-0.04em] sm:text-2xl">补充这份回忆的信息</h2>
+            <p className="apple-tertiary-text mt-2 truncate text-xs" title={filename}>{filename}</p>
 
             <label className="mt-7 block">
-              <span className="mb-2 block text-[10px] tracking-[0.12em] text-neutral-500 dark:text-neutral-400">YYYY-MM-DD</span>
+              <span className="apple-secondary-text mb-2 block text-[11px] font-medium">照片拍摄于</span>
               <input
                 ref={inputRef}
                 type="date"
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
-                className="min-h-12 w-full rounded-[14px] border border-black/10 bg-white px-4 text-sm tabular-nums outline-none transition-shadow focus:border-black/25 focus:ring-4 focus:ring-black/[0.04] dark:border-white/[0.12] dark:bg-white/[0.05] dark:focus:border-white/25 dark:focus:ring-white/[0.04]"
+                onInput={(event) => onChange(event.currentTarget.value)}
+                className="min-h-12 w-full rounded-[14px] border-0 bg-[var(--surface-muted)] px-4 text-sm tabular-nums text-[var(--page-fg)] shadow-[inset_0_0_0_0.5px_var(--separator)] outline-none transition-shadow duration-[180ms] focus:shadow-[inset_0_0_0_1.5px_var(--accent),0_0_0_4px_rgba(0,113,227,0.12)]"
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? 'taken-date-error' : undefined}
               />
             </label>
 
-            {error && <p id="taken-date-error" className="mt-2 text-xs text-amber-700 dark:text-amber-300">{error}</p>}
+            <fieldset className="mt-6">
+              <legend className="apple-secondary-text mb-2 text-[11px] font-medium">大学阶段</legend>
+              <div className="grid grid-cols-2 gap-2">
+                {academicYears.map((year) => {
+                  const selected = academicYear === year.id
+                  return (
+                    <button
+                      key={year.id}
+                      type="button"
+                      onClick={() => onAcademicYearChange(year.id)}
+                      className={`min-h-12 rounded-[14px] border-0 px-3 text-left text-xs font-medium shadow-[inset_0_0_0_0.5px_var(--separator)] transition-[transform,background-color,color,box-shadow] duration-[180ms] ease-[var(--ease-out)] active:scale-[0.98] ${selected
+                        ? 'bg-[var(--page-fg)] text-[var(--page-bg)] shadow-none'
+                        : 'bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:bg-[var(--surface)]'}`}
+                      aria-pressed={selected}
+                    >
+                      {year.title}
+                    </button>
+                  )
+                })}
+              </div>
+            </fieldset>
+
+            {error && <p id="taken-date-error" className="mt-3 rounded-xl bg-amber-500/[0.09] px-3 py-2.5 text-xs text-amber-800 dark:text-amber-200">{error}</p>}
 
             <div className="mt-8 grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={onCancel}
-                className="min-h-12 rounded-full border border-black/10 bg-white/60 px-5 text-sm font-medium transition-colors hover:bg-white dark:border-white/[0.12] dark:bg-white/[0.04] dark:hover:bg-white/[0.08]"
+                className="apple-secondary-button"
               >
                 取消
               </button>
               <button
                 type="submit"
-                className="min-h-12 rounded-full bg-neutral-900 px-5 text-sm font-medium text-white transition-transform hover:scale-[1.012] active:scale-[0.985] dark:bg-neutral-100 dark:text-neutral-900"
+                className="apple-primary-button"
               >
                 确认
               </button>

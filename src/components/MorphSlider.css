@@ -1,9 +1,91 @@
+.viewer-photo-space {
+  --viewer-photo-accent: #bfe8ff;
+  background: rgba(14, 17, 23, 0.58);
+  -webkit-backdrop-filter: blur(42px) saturate(145%);
+  backdrop-filter: blur(42px) saturate(145%);
+  isolation: isolate;
+}
+
+.dark .viewer-photo-space {
+  background: rgba(3, 5, 10, 0.7);
+}
+
+.viewer-photo-ambient {
+  inset: -18%;
+  width: 136%;
+  height: 136%;
+  opacity: 0.42;
+  transform: scale(1.28) translateZ(0);
+  filter: blur(68px) saturate(138%) brightness(0.74);
+}
+
+.dark .viewer-photo-ambient {
+  opacity: 0.34;
+  filter: blur(72px) saturate(132%) brightness(0.58);
+}
+
+.viewer-photo-atmosphere {
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 50% 48%, color-mix(in srgb, var(--viewer-photo-accent) 24%, transparent), transparent 58%),
+    linear-gradient(180deg, rgba(18, 21, 28, 0.22), rgba(9, 11, 17, 0.48));
+}
+
+.dark .viewer-photo-atmosphere {
+  background:
+    radial-gradient(ellipse at 50% 48%, color-mix(in srgb, var(--viewer-photo-accent) 18%, transparent), transparent 60%),
+    linear-gradient(180deg, rgba(5, 7, 12, 0.2), rgba(1, 2, 6, 0.56));
+}
+
+.viewer-photo-vignette {
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at center, transparent 34%, rgba(5, 7, 11, 0.16) 72%, rgba(3, 4, 8, 0.38) 100%),
+    linear-gradient(180deg, rgba(3, 5, 9, 0.18), transparent 22%, transparent 72%, rgba(3, 5, 9, 0.3));
+}
+
+.viewer-photo-shell {
+  flex: 0 0 auto;
+  border-radius: 28px;
+  transform-style: preserve-3d;
+  isolation: isolate;
+}
+
+.viewer-photo-shell::before,
+.viewer-photo-shell::after {
+  position: absolute;
+  content: '';
+  pointer-events: none;
+}
+
+.viewer-photo-shell::before {
+  z-index: -2;
+  inset: -7%;
+  border-radius: 12%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--viewer-photo-accent) 56%, transparent) 0%,
+    color-mix(in srgb, var(--viewer-photo-accent) 24%, transparent) 45%,
+    transparent 72%
+  );
+  filter: blur(34px) saturate(118%);
+  opacity: 0.44;
+  transform: translateZ(-48px) scale(0.96);
+  transition:
+    opacity 300ms ease,
+    transform 400ms var(--ease-in-out);
+}
+
+.viewer-photo-shell::after {
+  content: none;
+}
+
 .morph-slider {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0b0b0d;
+  background: transparent;
   user-select: none;
   touch-action: pan-y;
   isolation: isolate;
@@ -22,7 +104,7 @@
 }
 
 .morph-slider-stage:focus-visible {
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 0 0 3px rgba(41, 151, 255, 0.85);
 }
 
 .morph-slider-canvas {
@@ -38,9 +120,9 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: #0b0b0d;
+  background: transparent;
   opacity: 1;
-  transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 250ms var(--ease-out);
   pointer-events: none;
 }
 
@@ -54,54 +136,73 @@
   z-index: 4;
   display: flex;
   justify-content: space-between;
-  padding: 0 18px;
+  padding: 0 14px;
+  opacity: 1;
   transform: translateY(-50%);
   pointer-events: none;
+  transition: opacity 180ms ease;
 }
 
-.morph-slider-button {
+.morph-slider-button,
+.viewer-glass-control {
   display: inline-flex;
-  width: 44px;
+  min-width: 44px;
   height: 44px;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 0;
   border-radius: 999px;
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(10, 10, 12, 0.38);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.2), transparent 46%),
+    rgba(32, 32, 36, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.14),
+    0 12px 32px rgba(0, 0, 0, 0.24);
+  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  backdrop-filter: blur(26px) saturate(190%);
   cursor: pointer;
   pointer-events: auto;
   transition:
-    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 260ms ease,
-    border-color 260ms ease;
+    transform 140ms var(--ease-out),
+    background-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
-.morph-slider-button:hover {
-  border-color: rgba(255, 255, 255, 0.42);
-  background: rgba(20, 20, 23, 0.62);
-  transform: scale(1.06);
+.morph-slider-button svg {
+  width: 20px;
+  height: 20px;
 }
 
-.morph-slider-button:active {
-  transform: scale(0.95);
+.morph-slider-button:active,
+.viewer-glass-control:active {
+  transform: scale(0.94);
 }
 
 .morph-slider-indicators {
   position: absolute;
   left: 50%;
-  bottom: 16px;
+  bottom: 15px;
   z-index: 4;
   display: flex;
-  width: min(70%, 520px);
+  width: min(68%, 520px);
   align-items: center;
   justify-content: flex-start;
   gap: 7px;
   overflow-x: auto;
-  padding: 5px 2px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.14), transparent 48%),
+    rgba(31, 31, 35, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.12),
+    0 10px 28px rgba(0, 0, 0, 0.18);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   transform: translateX(-50%);
   scrollbar-width: none;
 }
@@ -111,45 +212,212 @@
 }
 
 .morph-slider-dot {
-  width: 7px;
-  min-width: 7px;
-  height: 7px;
+  width: 6px;
+  min-width: 6px;
+  height: 6px;
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.34);
   cursor: pointer;
   transition:
-    width calc(var(--morph-duration) * 0.42) cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 240ms ease;
+    width 250ms var(--ease-in-out),
+    background-color 180ms ease;
 }
 
 .morph-slider-dot.is-active {
-  width: 22px;
-  min-width: 22px;
+  width: 20px;
+  min-width: 20px;
   background: rgba(255, 255, 255, 0.94);
 }
 
-@media (max-width: 640px) {
-  .morph-slider-controls {
-    padding: 0 10px;
+@media (hover: hover) and (pointer: fine) {
+  .viewer-photo-shell:hover::before {
+    opacity: 0.58;
+    transform: translateZ(-48px) scale(0.985);
   }
 
-  .morph-slider-button {
-    width: 38px;
-    height: 38px;
+  .morph-slider-controls {
+    opacity: 0;
+  }
+
+  .morph-slider:hover .morph-slider-controls,
+  .morph-slider:focus-within .morph-slider-controls {
+    opacity: 1;
+  }
+
+  .morph-slider-button:hover,
+  .viewer-glass-control:hover {
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.28), transparent 48%),
+      rgba(52, 52, 58, 0.58);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.38),
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.24),
+      0 14px 34px rgba(0, 0, 0, 0.3);
+    transform: scale(1.035);
+  }
+}
+
+.viewer-liquid-frame {
+  isolation: isolate;
+  background: transparent;
+  box-shadow: none;
+}
+
+.viewer-liquid-frame::after {
+  content: none;
+}
+
+.viewer-photo-date {
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: rgba(255, 255, 255, 0.88);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 48%),
+    rgba(24, 25, 30, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.16);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewer-photo-navigation {
+  position: relative;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  width: min(100%, 560px);
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.viewer-photo-navigation-indicators {
+  display: flex;
+  min-width: 0;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 0 12px;
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.13), transparent 48%),
+    rgba(31, 31, 35, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
+    0 10px 28px rgba(0, 0, 0, 0.14);
+  -webkit-backdrop-filter: blur(22px) saturate(175%);
+  backdrop-filter: blur(22px) saturate(175%);
+  scrollbar-width: none;
+}
+
+.viewer-photo-navigation-indicators::-webkit-scrollbar {
+  display: none;
+}
+
+.viewer-liquid-caption {
+  color: rgba(255, 255, 255, 0.94);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), transparent 48%),
+    rgba(28, 28, 32, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.15),
+    0 12px 32px rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
+}
+
+@media (max-width: 640px) {
+  .viewer-photo-shell {
+    border-radius: 18px;
+  }
+
+  .viewer-photo-ambient {
+    inset: -24%;
+    width: 148%;
+    height: 148%;
+    filter: blur(56px) saturate(132%) brightness(0.72);
+  }
+
+  .viewer-photo-shell::before {
+    inset: -10%;
+    filter: blur(26px) saturate(112%);
+    opacity: 0.4;
+  }
+
+  .viewer-photo-date {
+    max-width: calc(100% - 20px);
+    padding: 6px 9px;
+    font-size: 9px;
+  }
+
+  .viewer-photo-navigation {
+    width: min(100%, 340px);
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .morph-slider-controls {
+    padding: 0 8px;
   }
 
   .morph-slider-indicators {
-    bottom: 12px;
-    width: min(64%, 320px);
+    bottom: 11px;
+    width: min(62%, 300px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .viewer-photo-shell {
+    transform: none !important;
+  }
+
+  .viewer-photo-shell::before,
+  .viewer-photo-shell::after {
+    transition: none;
+  }
+
   .morph-slider-fallback,
+  .morph-slider-controls,
   .morph-slider-button,
   .morph-slider-dot {
-    transition: none;
+    transition-duration: 1ms;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .viewer-photo-space {
+    background: #17191f;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .viewer-photo-ambient {
+    opacity: 0.18;
+  }
+
+  .morph-slider-button,
+  .viewer-glass-control,
+  .morph-slider-indicators,
+  .viewer-photo-date,
+  .viewer-photo-navigation-indicators {
+    background: #242426;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }

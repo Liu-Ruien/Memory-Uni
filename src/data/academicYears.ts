@@ -52,6 +52,8 @@ export const academicYears: AcademicYear[] = [
 ]
 
 export function getAcademicYearId(photo: Photo): AcademicYearId {
+  if (photo.academicYear) return photo.academicYear
+
   const takenDate = photo.takenAt?.slice(0, 10)
 
   if (!takenDate) return 'senior'

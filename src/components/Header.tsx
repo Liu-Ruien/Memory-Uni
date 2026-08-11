@@ -20,32 +20,34 @@ export function Header({ theme, onToggleTheme, onOpenPhotoManager }: HeaderProps
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-40 transition-all duration-500 ${
+      className={`fixed inset-x-0 top-0 z-40 transition-[background-color,box-shadow,backdrop-filter] duration-[250ms] ease-[var(--ease-out)] ${
         scrolled
-          ? 'bg-[#f5f2ec]/78 shadow-[0_1px_18px_rgba(70,57,38,0.035)] backdrop-blur-xl dark:bg-[#0d0d0d]/76 dark:shadow-[0_1px_20px_rgba(0,0,0,0.16)]'
+          ? 'liquid-glass-header'
           : 'bg-transparent'
       }`}
     >
-      <nav className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12" aria-label="主导航">
-        <a href="#top" className="text-[11px] font-semibold tracking-[0.22em] text-neutral-900 dark:text-neutral-100">
+      <nav className="mx-auto flex h-[68px] max-w-[1440px] items-center justify-between px-4 sm:px-8 lg:px-12" aria-label="主导航">
+        <a href="#top" className="rounded-lg px-1 py-2 text-[12px] font-semibold tracking-[0.08em] text-[var(--page-fg)] transition-opacity duration-[180ms] hover:opacity-65">
           我的回忆
         </a>
 
-        <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
-          <a href="#memory-section" className="hidden rounded-full px-3 py-2 text-xs text-neutral-600 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white md:block sm:px-4 sm:text-sm">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <a href="#memory-section" className="hidden rounded-full px-4 py-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors duration-[180ms] hover:text-[var(--page-fg)] md:block">
             回忆
           </a>
-          <a href="#about" className="hidden rounded-full px-3 py-2 text-xs text-neutral-600 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white md:block sm:px-4 sm:text-sm">
+          <a href="#about" className="hidden rounded-full px-4 py-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors duration-[180ms] hover:text-[var(--page-fg)] md:block">
             关于
           </a>
           <button
             type="button"
             onClick={onOpenPhotoManager}
-            className="grid h-10 min-w-10 place-items-center rounded-full border border-black/10 bg-white/45 px-0 text-neutral-800 transition-colors duration-300 hover:bg-white/80 dark:border-white/15 dark:bg-white/[0.04] dark:text-neutral-100 dark:hover:bg-white/[0.09] sm:px-4"
+            className="apple-toolbar-button px-0 sm:min-w-0 sm:px-4"
             aria-label="管理共享图库中的照片"
           >
-            <span className="text-lg leading-none sm:hidden" aria-hidden="true">＋</span>
-            <span className="hidden text-xs font-medium sm:inline">管理照片</span>
+            <svg className="size-[17px] sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span className="hidden text-[12px] font-semibold sm:inline">管理照片</span>
           </button>
           <MusicControl />
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
