@@ -10,8 +10,8 @@ import { useEffect, useMemo, useRef, type CSSProperties, type PointerEvent as Re
 import type { Photo } from '../data/photos'
 import { appleEaseOut, appleGestureSpring } from '../design/motion'
 import { usePhotoPresentation } from '../hooks/usePhotoPresentation'
+import { useDialogFocusScope } from '../hooks/useDialogFocusScope'
 import { useViewerFrameSize } from '../hooks/useViewerFrameSize'
-import { formatTakenAt } from '../lib/photoTakenAt'
 import { MorphSlider, type MorphSliderHandle, type MorphSliderItem } from './MorphSlider'
 
 interface PhotoViewerProps {
@@ -32,16 +32,18 @@ export function PhotoViewer({ photos, activeIndex, isOpen, onClose, onActiveInde
   )
   const frameSize = useViewerFrameSize(presentation.aspect, isOpen)
   const sliderRef = useRef<MorphSliderHandle>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const viewerDialogRef = useDialogFocusScope<HTMLDivElement>(isOpen && Boolean(photo), {
+    initialFocusRef: closeButtonRef,
+    onEscape: onClose,
+  })
   const rotateX = useMotionValue(0)
   const rotateY = useMotionValue(0)
   const springRotateX = useSpring(rotateX, { stiffness: 170, damping: 24, mass: 0.75 })
   const springRotateY = useSpring(rotateY, { stiffness: 170, damping: 24, mass: 0.75 })
   const tiltTransform = useMotionTemplate`perspective(1200px) rotateX(${springRotateX}deg) rotateY(${springRotateY}deg) translateZ(0px)`
   const items = useMemo<MorphSliderItem[]>(
-    () => photos.map((photo) => {
-      const takenAt = formatTakenAt(photo.takenAt)
-      return { image: photo.src, alt: photo.alt, caption: takenAt ? `拍摄于 ${takenAt}` : undefined }
-    }),
+    () => photos.map((photo, index) => ({ image: photo.src, alt: `共同回忆照片 ${index + 1}` })),
     [photos],
   )
 
@@ -87,7 +89,6 @@ export function PhotoViewer({ photos, activeIndex, isOpen, onClose, onActiveInde
     }
   }, [frameSize.height, frameSize.width, isOpen])
 
-  const takenAt = formatTakenAt(photo?.takenAt)
   const viewerStyle = {
     '--viewer-photo-accent': presentation.accent,
     '--viewer-photo-aspect': frameSize.aspect,
@@ -97,6 +98,7 @@ export function PhotoViewer({ photos, activeIndex, isOpen, onClose, onActiveInde
     <AnimatePresence>
       {isOpen && photo && (
         <motion.div
+          ref={viewerDialogRef}
           className="viewer-photo-space fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-2 pb-20 pt-16 text-white sm:px-8 sm:pb-20 sm:pt-20"
           style={viewerStyle}
           initial={{ opacity: 0 }}
@@ -106,7 +108,9 @@ export function PhotoViewer({ photos, activeIndex, isOpen, onClose, onActiveInde
           onClick={onClose}
           role="dialog"
           aria-modal="true"
-          aria-label={`沉浸式照片浏览：${photo.title}`}
+          aria-label={`沉浸式照片浏览：共同回忆照片 ${activeIndex + 1}`}
+          tabIndex={-1}
+          data-dialog-layer="true"
         >
           <AnimatePresence mode="popLayout">
             <motion.div
@@ -129,7 +133,7 @@ export function PhotoViewer({ photos, activeIndex, isOpen, onClose, onActiveInde
           <div className="viewer-photo-vignette pointer-events-none absolute inset-0" aria-hidden="true" />
 
           <div className="absolute inset-x-3 top-3 z-30 flex items-center justify-between sm:inset-x-6 sm:top-5">
-            <button type="button" onClick={onClose} className="viewer-glass-control" aria-label="关闭照片浏览">
+            <button ref={closeButtonRef} type="button" onClick={onClose} className="viewer-glass-control" aria-label="关闭照片浏览">
               <svg className="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true">
                 <path d="m7 7 10 10M17 7 7 17" />
               </svg>
@@ -174,25 +178,12 @@ export function PhotoViewer({ photos, activeIndex, isOpen, onClose, onActiveInde
                     intensity={0.5}
                     aberration={0.24}
                     drift={0.22}
-                    radius={28}
+                    radius={3}
                     showControls={false}
                     onIndexChange={onActiveIndexChange}
                     onClose={onClose}
                   />
 
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={`viewer-date-${photo.id}`}
-                      className="viewer-photo-date pointer-events-none absolute left-3 top-3 z-10 sm:left-4 sm:top-4"
-                      initial={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(-4px)' }}
-                      animate={{ opacity: 1, transform: 'translateY(0px)' }}
-                      exit={{ opacity: 0, transform: reduceMotion ? 'none' : 'translateY(-3px)' }}
-                      transition={{ duration: 0.2, ease: appleEaseOut }}
-                      data-motion-transform="true"
-                    >
-                      {takenAt ? `拍摄于 ${takenAt}` : '拍摄时间未知'}
-                    </motion.div>
-                  </AnimatePresence>
                 </motion.div>
               </motion.div>
             </div>

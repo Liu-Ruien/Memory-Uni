@@ -46,7 +46,7 @@
 
 .viewer-photo-shell {
   flex: 0 0 auto;
-  border-radius: 28px;
+  border-radius: var(--radius-card);
   transform-style: preserve-3d;
   isolation: isolate;
 }
@@ -312,10 +312,11 @@
   gap: 7px;
   overflow-x: auto;
   padding: 0 12px;
-  border-radius: 999px;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.13), transparent 48%),
-    rgba(31, 31, 35, 0.28);
+  border-radius: var(--radius-control);
+  background-color: rgba(31, 35, 34, 0.48);
+  background-image: var(--glass-texture);
+  background-size: 420px;
+  background-blend-mode: soft-light;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 0 0 0.5px rgba(255, 255, 255, 0.1),
@@ -344,7 +345,7 @@
 
 @media (max-width: 640px) {
   .viewer-photo-shell {
-    border-radius: 18px;
+    border-radius: var(--radius-card);
   }
 
   .viewer-photo-ambient {

@@ -16,31 +16,36 @@ export function Header({ onOpenPhotoManager }: HeaderProps) {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-40 transition-[background-color,box-shadow,backdrop-filter] duration-[250ms] ease-[var(--ease-out)] ${
-        scrolled
-          ? 'liquid-glass-header'
-          : 'bg-transparent'
-      }`}
+      className={`proof-header${scrolled ? ' is-scrolled' : ''}`}
     >
-      <nav className="mx-auto flex h-[68px] max-w-[1440px] items-center justify-between px-4 sm:px-8 lg:px-12" aria-label="主导航">
-        <a href="#top" className="rounded-lg px-1 py-2 text-[12px] font-semibold tracking-[0.08em] text-[var(--page-fg)] transition-opacity duration-[180ms] hover:opacity-65">
-          我的回忆
+      <nav className="proof-header-nav" aria-label="主导航">
+        <a href="#top" className="proof-brand" aria-label="返回 Memory Uni 首页">
+          <svg viewBox="0 0 28 28" aria-hidden="true">
+            <path d="M5 23V5h5.5l3.5 8 3.5-8H23v18h-4V10.8l-3.2 7.1h-3.6L9 10.8V23Z" />
+          </svg>
+          <span>
+            <strong>MEMORY UNI</strong>
+            <small>2022—2026 · LINYI UNIVERSITY</small>
+          </span>
         </a>
 
-        <div className="flex items-center gap-1 md:gap-2">
-          <a href="#memory-section" className="hidden rounded-full px-4 py-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors duration-[180ms] hover:text-[var(--page-fg)] md:block">
-            回忆
+        <div className="proof-header-actions">
+          <a href="#memory-section" className="proof-header-link">
+            四年相册
           </a>
-          <a href="#about" className="hidden rounded-full px-4 py-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors duration-[180ms] hover:text-[var(--page-fg)] md:block">
-            关于
+          <a href="/memory-film" className="proof-header-link">
+            Memory Film
           </a>
           <button
             type="button"
             onClick={onOpenPhotoManager}
-            className="apple-toolbar-button min-w-0 px-4"
-            aria-label="管理共享图库中的照片"
+            className="proof-header-upload"
+            aria-label="补上一张照片或管理共享照片"
           >
-            <span className="text-[12px] font-semibold">管理照片</span>
+            <span>补照片</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
           </button>
         </div>
       </nav>

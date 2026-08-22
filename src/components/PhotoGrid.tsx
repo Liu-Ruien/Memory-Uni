@@ -8,7 +8,13 @@ interface PhotoGridProps {
 }
 
 function hasMeaningfulTitle(photo: Photo) {
-  return Boolean(photo.title.trim() && photo.title !== '未命名回忆')
+  const title = photo.title.trim()
+  return Boolean(
+    title
+    && title !== '未命名回忆'
+    && title !== '拍摄时间未知'
+    && !title.startsWith('拍摄于 '),
+  )
 }
 
 export function PhotoGrid({ photos, isLoading = false, onSelect }: PhotoGridProps) {
@@ -62,11 +68,11 @@ export function PhotoGrid({ photos, isLoading = false, onSelect }: PhotoGridProp
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.5, delay: (index % 4) * 0.04, ease: [0.22, 1, 0.36, 1] }}
-            aria-label={`查看照片：${photo.title}`}
+            aria-label={`查看共同回忆照片 ${index + 1}`}
           >
             <img
               src={photo.src}
-              alt={photo.alt}
+              alt={`共同回忆照片 ${index + 1}`}
               loading="lazy"
               decoding="async"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025]"
@@ -79,7 +85,7 @@ export function PhotoGrid({ photos, isLoading = false, onSelect }: PhotoGridProp
               </span>
             ) : (
               <span className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 p-3 text-left text-[11px] font-medium text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 sm:p-4" aria-hidden="true">
-                {photo.title}
+                共同回忆
               </span>
             )}
           </motion.button>

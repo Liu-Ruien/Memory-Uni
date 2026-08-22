@@ -79,7 +79,7 @@ interface CounterContentProps {
 function CounterContent({ elapsedDays, fallback = false }: CounterContentProps) {
   return (
     <section
-      className={`graduation-memory-content w-full rounded-[28px] px-6 py-6 sm:rounded-[30px] sm:px-7 sm:py-7 ${fallback ? 'graduation-memory-card' : ''}`}
+      className={`graduation-memory-content w-full rounded-[var(--radius-card)] px-6 py-6 sm:px-7 sm:py-7 ${fallback ? 'graduation-memory-card' : ''}`}
       aria-label={`已毕业 ${elapsedDays} 天，2026年6月18日至今`}
     >
       <div className="flex items-center justify-between gap-4">
@@ -107,6 +107,7 @@ function CounterContent({ elapsedDays, fallback = false }: CounterContentProps) 
 export function GraduationMemoryCounter({ graduationDate = defaultGraduationDate }: GraduationMemoryCounterProps) {
   const reduceMotion = useReducedMotion()
   const supportsLiquidGlass = useLiquidGlassSupport()
+  const useFullLiquidGlass = supportsLiquidGlass && !reduceMotion
   const [elapsedDays, setElapsedDays] = useState(() => getElapsedDays(graduationDate))
 
   useEffect(() => {
@@ -131,27 +132,25 @@ export function GraduationMemoryCounter({ graduationDate = defaultGraduationDate
       data-motion-transform="true"
     >
       <motion.div
-        className="graduation-counter-interaction"
+        className={`graduation-counter-interaction ${useFullLiquidGlass ? 'graduation-liquid-host' : ''}`}
         data-motion-transform="true"
       >
-        {supportsLiquidGlass && !reduceMotion ? (
-          <div className="graduation-liquid-host">
-            <LiquidGlass
-              className="graduation-liquid-glass"
-              displacementScale={20}
-              blurAmount={0.02}
-              saturation={102}
-              aberrationIntensity={0.12}
-              elasticity={0}
-              cornerRadius={30}
-              padding="0px"
-              overLight={false}
-              mode="standard"
-              style={{ position: 'absolute', top: '50%', left: '50%', width: '100%' }}
-            >
-              <CounterContent elapsedDays={elapsedDays} />
-            </LiquidGlass>
-          </div>
+        {useFullLiquidGlass ? (
+          <LiquidGlass
+            className="graduation-liquid-glass"
+            displacementScale={20}
+            blurAmount={0.01}
+            saturation={102}
+            aberrationIntensity={0.18}
+            elasticity={0}
+            cornerRadius={16}
+            padding="0px"
+            overLight={false}
+            mode="standard"
+            style={{ position: 'absolute', top: '50%', left: '50%', width: '100%' }}
+          >
+            <CounterContent elapsedDays={elapsedDays} />
+          </LiquidGlass>
         ) : (
           <CounterContent elapsedDays={elapsedDays} fallback />
         )}

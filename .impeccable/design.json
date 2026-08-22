@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-20T10:20:21.1171582+08:00",
+  "title": "Design System: Memory Uni",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "薄荷白纸面",
+        "tonalRamp": ["#17332e", "#36544d", "#5a756e", "#7f9991", "#a6bbb4", "#cad8d3", "#e5eeea", "#f4f8f5"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "深青墨色",
+        "tonalRamp": ["#0a1b18", "#17332e", "#2d4d46", "#49675f", "#69847c", "#91aaa3", "#c2d1cc", "#eff5f2"]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "记录灰",
+        "tonalRamp": ["#14241f", "#293e38", "#3d5952", "#56756d", "#759089", "#9cafa9", "#c5d2ce", "#eff4f2"]
+      },
+      "tertiary": {
+        "role": "neutral",
+        "displayName": "注释灰",
+        "tonalRamp": ["#182622", "#30423d", "#465e58", "#58716b", "#78908a", "#9faeaa", "#c8d2cf", "#f0f4f2"]
+      },
+      "cobalt": {
+        "role": "primary",
+        "displayName": "晴空蓝",
+        "tonalRamp": ["#081f4b", "#103b82", "#1856b1", "#276dd2", "#5592e4", "#86b3ee", "#b9d4f7", "#edf5ff"]
+      },
+      "cobalt-deep": {
+        "role": "primary",
+        "displayName": "深晴空蓝",
+        "tonalRamp": ["#071936", "#0c2e62", "#12448d", "#1856b1", "#3974c5", "#6b99d9", "#a7c1eb", "#edf4fc"]
+      },
+      "mint": {
+        "role": "secondary",
+        "displayName": "薄荷绿",
+        "tonalRamp": ["#0a3129", "#125849", "#23836d", "#4dbca4", "#76d1bd", "#9ee1d2", "#c9efe6", "#effbf8"]
+      },
+      "amber": {
+        "role": "secondary",
+        "displayName": "阳光黄",
+        "tonalRamp": ["#332000", "#573700", "#7c5102", "#b77a08", "#d69b2d", "#e6bb69", "#f2d99f", "#fff6dd"]
+      },
+      "oxblood": {
+        "role": "tertiary",
+        "displayName": "归档珊瑚",
+        "tonalRamp": ["#3b0c16", "#671625", "#922d3e", "#c94f60", "#db7684", "#e9a2ac", "#f3cbd1", "#fff0f2"]
+      },
+      "film": {
+        "role": "neutral",
+        "displayName": "深青功能面",
+        "tonalRamp": ["#061918", "#0b2928", "#123b3a", "#245654", "#477673", "#769b96", "#abc3bf", "#edf5f3"]
+      },
+      "film-night": {
+        "role": "neutral",
+        "displayName": "影片深青黑",
+        "tonalRamp": ["#03100f", "#061817", "#0b2d29", "#185046", "#347366", "#63988a", "#a5c8bd", "#eef7f4"]
+      },
+      "film-raised": {
+        "role": "neutral",
+        "displayName": "影片抬升面",
+        "tonalRamp": ["#04110f", "#0b2421", "#173d38", "#2e5a52", "#4f796f", "#789f94", "#b1cac3", "#eef7f4"]
+      },
+      "film-mint": {
+        "role": "secondary",
+        "displayName": "影片薄荷反光",
+        "tonalRamp": ["#082c25", "#105043", "#207a68", "#43a891", "#6bc6b1", "#9edbcb", "#c7ebe1", "#effaf7"]
+      },
+      "film-coral": {
+        "role": "tertiary",
+        "displayName": "影片珊瑚",
+        "tonalRamp": ["#3a100c", "#681d18", "#9b3028", "#c94f43", "#f06b5d", "#f5968c", "#fac5bf", "#fff0ed"]
+      },
+      "steel": {
+        "role": "neutral",
+        "displayName": "青灰",
+        "tonalRamp": ["#1d2d29", "#344b46", "#506b65", "#6b8881", "#7f9993", "#a6b9b4", "#ccd7d4", "#f1f5f4"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Memory Display",
+        "purpose": "首屏主题句、四年章节与 Memory Film 标题；表达时间和章节。"
+      },
+      "headline": {
+        "displayName": "Archive Headline",
+        "purpose": "学年归档标题与大号年份，保持展示字体的窄体节奏。"
+      },
+      "body": {
+        "displayName": "Working Text",
+        "purpose": "上传说明、状态、正文和所有需要持续阅读的内容。"
+      },
+      "label": {
+        "displayName": "Proof Label",
+        "purpose": "按钮、数量、站点、微标与编辑状态。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "photo-rest",
+        "value": "0 8px 22px rgba(33, 86, 73, 0.10)",
+        "purpose": "让静置照片轻微离开薄荷白纸面。"
+      },
+      {
+        "name": "photo-hover",
+        "value": "0 20px 48px rgba(31, 91, 75, 0.20)",
+        "purpose": "仅用于精确指针设备上的可点击照片悬停。"
+      },
+      {
+        "name": "upload-glass",
+        "value": "inset 0 1px rgba(255,255,255,0.28), 0 14px 32px rgba(39,109,210,0.30)",
+        "purpose": "晴空蓝上传节点的功能性厚度。"
+      },
+      {
+        "name": "film-glass",
+        "value": "inset 0 1px rgba(255,255,255,0.23), 0 22px 52px rgba(71,17,31,0.34)",
+        "purpose": "Memory Film 终点的珊瑚功能性厚度。"
+      },
+      {
+        "name": "modal-ambient",
+        "value": "0 26px 80px rgba(17,21,20,0.24)",
+        "purpose": "系统弹层与底部面板的单层环境影。"
+      },
+      {
+        "name": "film-photo",
+        "value": "0 24px 58px rgba(0,7,7,0.42), 0 5px 15px rgba(0,8,7,0.28)",
+        "purpose": "Memory Film 场景相纸的方向性双层阴影。"
+      },
+      {
+        "name": "film-photo-hero",
+        "value": "0 38px 90px rgba(0,7,7,0.52), 0 8px 24px rgba(0,8,7,0.34)",
+        "purpose": "首屏中央真实毕业合照与近景相纸的更深纵深。"
+      },
+      {
+        "name": "film-functional-glass",
+        "value": "inset 0 1px 0 rgba(255,255,255,0.24), 0 16px 38px rgba(0,8,7,0.28)",
+        "purpose": "退出、播放、进度与重播等夜间功能玻璃；不用于影片场景容器。"
+      },
+      {
+        "name": "device-notice",
+        "value": "0 34px 90px rgba(2,24,20,0.34), 0 8px 28px rgba(2,24,20,0.18)",
+        "purpose": "主站仅电脑端设备提示的高完成度纸面环境影。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "玻璃物化、照片归位与进入反馈。"
+      },
+      {
+        "name": "state-fast",
+        "value": "140ms cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "按压、焦点、节点与短状态切换。"
+      },
+      {
+        "name": "surface-standard",
+        "value": "180ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "按钮、照片和边线的可中断悬停反馈。"
+      },
+      {
+        "name": "relay-draw",
+        "value": "720ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "接力轨沿阅读方向一次绘制；减少动态时替换为即时呈现。"
+      },
+      {
+        "name": "reduced-motion",
+        "value": "1ms linear + static composition/crossfade",
+        "purpose": "prefers-reduced-motion 下用静态构图和短交叉淡入替代三维位移、缩放、环绕与长轨迹，同时保留完整章节和片尾。"
+      },
+      {
+        "name": "film-view-transition",
+        "value": "560ms/720ms cubic-bezier(0.16,1,0.3,1), reduced-motion 200ms/240ms opacity",
+        "purpose": "Memory Film 照片门与第一幕同步叠化；只让有边界的真实照片门向镜头前进，完整视口仅改变透明度，减少动态只保留短交叉淡入。"
+      },
+      {
+        "name": "film-atmosphere",
+        "value": "opacity 1500ms, transform 2200ms cubic-bezier(0.16,1,0.3,1); damped persistent particle field",
+        "purpose": "深青光雾随章节缓慢呼吸，尘埃保存连续坐标并平滑改变横流、环流、径向与静止速度场。"
+      },
+      {
+        "name": "film-runtime",
+        "value": "75.3s GSAP timeline; linear progress; expo handoff + sine drift + restrained back settle",
+        "purpose": "七章由同一时间线驱动；照片从当前呈现值连续交接，时间流加速/巡航/减速，记忆环内外层分离，隧道保持动量，重聚轻微回正。"
+      },
+      {
+        "name": "film-chapter-overlap",
+        "value": "360ms stream→ring; 320ms ring→tunnel; 340ms tunnel→gathering",
+        "purpose": "下一章在上一章结束前接管当前照片位置与速度，消除七段动画拼接感。"
+      },
+      {
+        "name": "film-control-idle",
+        "value": "1750ms",
+        "purpose": "仅精确指针播放时，静止后 HUD 退场；指针移动或键盘焦点进入立即恢复。"
+      },
+      {
+        "name": "device-notice-transition",
+        "value": "250ms cubic-bezier(0.23,1,0.32,1)",
+        "purpose": "设备提示遮罩淡入与纸面 18px 上移/0.97 缩放进入；减少动态时只淡入。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "767px"
+      },
+      {
+        "name": "tablet",
+        "value": "1099px"
+      },
+      {
+        "name": "content-max",
+        "value": "1440px"
+      },
+      {
+        "name": "film-compact",
+        "value": "980px width"
+      },
+      {
+        "name": "film-narrow-layout",
+        "value": "719px width"
+      },
+      {
+        "name": "film-short-layout",
+        "value": "720px height"
+      },
+      {
+        "name": "film-short-landscape",
+        "value": "520px height"
+      },
+      {
+        "name": "film-blocked-device",
+        "value": "userAgentData.mobile OR handheld UA OR (touch + coarse pointer + min hardware screen <= 1024px)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Upload",
+      "kind": "button",
+      "refersTo": "upload-primary",
+      "description": "整条共同记忆路径的晴空蓝起点，负责启动既有上传流程。",
+      "html": "<button class=\"ds-upload\" type=\"button\"><span class=\"ds-upload-label\">补上一张照片</span><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5\"/></svg></button>",
+      "css": ".ds-upload{min-height:52px;padding:14px 18px;display:inline-flex;align-items:center;justify-content:space-between;gap:22px;border:1px solid rgba(255,255,255,.22);border-radius:14px;background-color:#173d9e;background-image:linear-gradient(145deg,rgba(255,255,255,.12),transparent 44%,rgba(255,255,255,.03));color:#eef0ec;box-shadow:inset 0 1px rgba(255,255,255,.18),0 14px 32px rgba(23,61,158,.24);font:600 11px/1.3 'Segoe UI Variable Text','PingFang SC',sans-serif;letter-spacing:.035em;cursor:pointer;transition:background-color 180ms cubic-bezier(.22,1,.36,1),transform 140ms cubic-bezier(.2,0,0,1)}.ds-upload svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ds-upload:hover{background-color:#102d7d}.ds-upload:active{transform:translateY(1px)}.ds-upload:focus-visible{outline:2px solid #eef0ec;outline-offset:2px;box-shadow:0 0 0 4px #173d9e}@media(prefers-reduced-transparency:reduce){.ds-upload{background-image:none}}@media(prefers-reduced-motion:reduce){.ds-upload{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Film Link",
+      "kind": "custom",
+      "refersTo": "film-link",
+      "description": "电脑端进入夜间放映章节；手机和平板保持在相册并打开设备提示。",
+      "html": "<a class=\"ds-film\" href=\"/memory-film\"><span><small>FINAL CHAPTER</small><strong>进入 Memory Film</strong></span><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14m-5-5 5 5-5 5\"/></svg></a>",
+      "css": ".ds-film{min-height:72px;padding:12px 14px 12px 20px;display:flex;align-items:center;justify-content:space-between;gap:24px;border:1px solid rgba(249,230,221,.32);border-radius:16px;background-color:#6f1a2b;background-image:linear-gradient(145deg,rgba(255,255,255,.12),transparent 44%,rgba(255,255,255,.03));color:#eef0ec;box-shadow:inset 0 1px rgba(255,255,255,.18),0 20px 48px rgba(67,12,26,.36);text-decoration:none;transition:background-color 180ms cubic-bezier(.22,1,.36,1)}.ds-film span{display:grid;gap:4px}.ds-film small{font:600 9px/1.2 'Segoe UI Variable Text','PingFang SC',sans-serif;letter-spacing:.08em;opacity:.72}.ds-film strong{font:400 22px/1 'Memory Display','ZCOOL QingKe HuangYou',sans-serif}.ds-film svg{width:44px;height:44px;padding:11px;border:1px solid rgba(255,244,236,.38);border-radius:50%;fill:currentColor;transition:transform 180ms cubic-bezier(.22,1,.36,1)}.ds-film:hover{background-color:#52101f}.ds-film:hover svg{transform:translateX(2px) scale(1.03)}.ds-film:focus-visible{outline:3px solid #c5820d;outline-offset:3px}@media(prefers-reduced-transparency:reduce){.ds-film{background-image:none}}@media(prefers-reduced-motion:reduce){.ds-film,.ds-film svg{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Header Navigation",
+      "kind": "nav",
+      "refersTo": "header-navigation",
+      "description": "把品牌、年份、影片与上传保持在同一块连续圆角钢框中的紧凑导航。",
+      "html": "<nav class=\"ds-nav\" aria-label=\"主导航\"><a class=\"ds-brand\" href=\"/\"><span class=\"ds-brand-mark\">MU</span><span><strong>我的回忆</strong><small>2022—2026</small></span></a><div class=\"ds-nav-links\"><a href=\"#years\">四年</a><a href=\"/memory-film\">Memory Film</a><button type=\"button\" aria-label=\"上传照片\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 16V4m0 0L8 8m4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5\"/></svg><span>上传</span></button></div></nav>",
+      "css": ".ds-nav{min-height:58px;padding:6px 6px 6px 10px;display:flex;align-items:center;justify-content:space-between;gap:20px;border:1px solid rgba(77,85,84,.48);border-radius:16px;background:rgba(238,240,236,.94);color:#111514;font-family:'Segoe UI Variable Text','PingFang SC',sans-serif}.ds-brand{display:flex;align-items:center;gap:9px;color:inherit;text-decoration:none}.ds-brand-mark{width:30px;height:30px;display:grid;place-items:center;border:1px solid #111514;border-radius:10px;font:400 15px/1 'Memory Display','ZCOOL QingKe HuangYou',sans-serif}.ds-brand>span:last-child{display:grid}.ds-brand strong{font-size:13px}.ds-brand small{font-size:9px;letter-spacing:.06em;color:#656d6b}.ds-nav-links{display:flex;align-items:center;gap:18px}.ds-nav-links>a{color:#4d5554;font-size:11px;text-decoration:none}.ds-nav-links>a:hover{color:#173d9e}.ds-nav-links button{min-height:44px;padding:0 14px;display:inline-flex;align-items:center;gap:7px;border:0;border-radius:14px;background:#173d9e;color:#eef0ec;font:600 11px/1.2 inherit;cursor:pointer}.ds-nav-links button:hover{background:#102d7d}.ds-nav a:focus-visible,.ds-nav button:focus-visible{outline:3px solid #c5820d;outline-offset:2px}.ds-nav svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}@media(max-width:600px){.ds-nav-links>a,.ds-nav-links button span,.ds-brand small{display:none}.ds-nav-links{gap:0}.ds-nav-links button{width:44px;padding:0;justify-content:center}}"
+    },
+    {
+      "name": "Relay Stop",
+      "kind": "custom",
+      "refersTo": "relay-stop",
+      "description": "连续四年接力轨中的单个可达站点，展示学年和真实数量。",
+      "html": "<a class=\"ds-relay\" href=\"#year-2\"><span class=\"ds-relay-node\" aria-hidden=\"true\"></span><span><small>STOP 02 · 2023—24</small><strong>大二</strong></span><b>09</b></a>",
+      "css": ".ds-relay{position:relative;min-width:150px;min-height:68px;padding:13px 14px 13px 23px;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid #697472;border-radius:16px;background:#eef0ec;color:#111514;text-decoration:none;font-family:'Segoe UI Variable Text','PingFang SC',sans-serif;transition:background-color 180ms cubic-bezier(.22,1,.36,1),color 180ms cubic-bezier(.22,1,.36,1)}.ds-relay:before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:#697472;opacity:.5}.ds-relay>span:not(.ds-relay-node),.ds-relay>b{position:relative;background:#eef0ec}.ds-relay>span:not(.ds-relay-node){display:grid;gap:3px;padding-right:7px}.ds-relay small{font-size:8px;letter-spacing:.06em;color:#656d6b}.ds-relay strong{font:400 22px/1 'Memory Display','ZCOOL QingKe HuangYou',sans-serif}.ds-relay b{padding-left:7px;font:400 27px/1 'Memory Display','ZCOOL QingKe HuangYou',sans-serif}.ds-relay-node{position:absolute;z-index:2;left:7px;top:50%;width:9px;height:9px;border:1px solid #173d9e;border-radius:3px;background:#eef0ec;transform:translateY(-50%) rotate(45deg)}.ds-relay:hover{background:#e2e6e1}.ds-relay:hover>span:not(.ds-relay-node),.ds-relay:hover>b{background:#e2e6e1}.ds-relay:focus-visible{outline:3px solid #c5820d;outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-relay{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Year Pane",
+      "kind": "card",
+      "refersTo": "year-pane",
+      "description": "四年连续圆角玻璃墙中的一格，以真实照片、年份和数量建立归档入口。",
+      "html": "<a class=\"ds-year\" href=\"#year-3\"><div class=\"ds-year-photo\" role=\"img\" aria-label=\"大三照片预览\"><span>真实照片预览</span></div><div class=\"ds-year-meta\"><span><small>YEAR 03</small><strong>大三</strong></span><b>11</b></div></a>",
+      "css": ".ds-year{min-height:430px;padding:14px;display:flex;flex-direction:column;border:1px solid #697472;border-radius:16px;background:#eef0ec;color:#111514;text-decoration:none;font-family:'Segoe UI Variable Text','PingFang SC',sans-serif;transition:background-color 180ms cubic-bezier(.22,1,.36,1)}.ds-year-photo{position:relative;aspect-ratio:1.35/1;display:grid;place-items:center;overflow:hidden;border:1px solid #4d5554;border-radius:14px;background:linear-gradient(135deg,#d6dbd5,#b6c0bc);color:#4d5554;font-size:10px;letter-spacing:.04em}.ds-year-photo:after{content:'';position:absolute;inset:5px;border:1px solid rgba(238,240,236,.75);border-radius:10px;pointer-events:none}.ds-year-meta{margin-top:auto;padding-top:22px;display:flex;align-items:end;justify-content:space-between;border-top:1px solid rgba(105,116,114,.48)}.ds-year-meta>span{display:grid;gap:6px}.ds-year small{font-size:9px;letter-spacing:.08em;color:#656d6b}.ds-year strong{font:400 40px/.9 'Memory Display','ZCOOL QingKe HuangYou',sans-serif}.ds-year b{font:400 52px/.8 'Memory Display','ZCOOL QingKe HuangYou',sans-serif;color:#173d9e}.ds-year:hover{background:#e4e8e3}.ds-year:focus-visible{outline:3px solid #c5820d;outline-offset:3px}@media(max-width:600px){.ds-year{min-height:0}.ds-year-photo{aspect-ratio:1.55/1}}@media(prefers-reduced-motion:reduce){.ds-year{transition-duration:.01ms}}"
+    },
+    {
+      "name": "Photo Frame",
+      "kind": "card",
+      "refersTo": "photo-frame",
+      "description": "尊重原比例、用连续圆角细钢框托住真实照片的可点击校样片。",
+      "html": "<button class=\"ds-photo\" type=\"button\" aria-label=\"查看照片\"><span class=\"ds-photo-image\" role=\"img\" aria-label=\"真实照片位置\"></span><small>MEMORY UNI · 03</small></button>",
+      "css": ".ds-photo{width:280px;padding:5px 5px 8px;overflow:hidden;border:1px solid rgba(77,85,84,.62);border-radius:16px;background:#eef0ec;color:#4d5554;box-shadow:0 8px 22px rgba(29,38,36,.10);font:600 9px/1.2 'Segoe UI Variable Text','PingFang SC',sans-serif;letter-spacing:.05em;text-align:left;cursor:pointer;transition:transform 180ms cubic-bezier(.22,1,.36,1),box-shadow 180ms cubic-bezier(.22,1,.36,1)}.ds-photo-image{display:block;aspect-ratio:4/3;border-radius:12px;background:linear-gradient(145deg,#abb8b3,#d8ddd8 48%,#8c9995)}.ds-photo small{display:block;padding:8px 4px 0}.ds-photo:focus-visible{outline:3px solid #173d9e;outline-offset:3px}@media(hover:hover) and (pointer:fine){.ds-photo:hover{transform:translateY(-2px);box-shadow:0 20px 48px rgba(29,38,36,.18)}}@media(prefers-reduced-motion:reduce){.ds-photo{transition-duration:.01ms}}"
+    },
+    {
+      "name": "System Modal",
+      "kind": "custom",
+      "refersTo": "modal",
+      "description": "用于上传、进度与确认的高不透明薄荷白玻璃弹层。",
+      "html": "<section class=\"ds-modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"ds-modal-title\"><header><span><small>SHARED PROOF TABLE</small><h2 id=\"ds-modal-title\">补上一张照片</h2></span><button type=\"button\" aria-label=\"关闭\">×</button></header><p>选择照片后，我们会确认比例、裁剪方式与它属于哪一个学年。</p><div class=\"ds-modal-actions\"><button class=\"ds-modal-cancel\" type=\"button\">取消</button><button class=\"ds-modal-primary\" type=\"button\">选择照片</button></div></section>",
+      "css": ".ds-modal{width:min(440px,calc(100vw - 28px));padding:24px;border:1px solid rgba(77,85,84,.48);border-radius:24px;background-color:rgba(245,247,243,.94);background-image:linear-gradient(145deg,rgba(255,255,255,.38),transparent 46%,rgba(77,188,164,.05));color:#111514;box-shadow:0 26px 80px rgba(17,21,20,.24);font-family:'Segoe UI Variable Text','PingFang SC',sans-serif}.ds-modal header{display:flex;align-items:start;justify-content:space-between;gap:24px}.ds-modal header>span{display:grid;gap:7px}.ds-modal small{font-size:9px;letter-spacing:.08em;color:#656d6b}.ds-modal h2{margin:0;font:400 38px/1 'Memory Display','ZCOOL QingKe HuangYou',sans-serif}.ds-modal p{margin:20px 0 26px;color:#4d5554;font-size:14px;line-height:1.65}.ds-modal header button{width:44px;height:44px;border:1px solid #697472;border-radius:14px;background:transparent;color:#111514;font-size:24px;cursor:pointer}.ds-modal-actions{display:flex;justify-content:flex-end;gap:8px}.ds-modal-actions button{min-height:44px;padding:0 16px;border-radius:14px;font:600 11px/1.2 inherit;cursor:pointer}.ds-modal-cancel{border:1px solid #697472;background:transparent;color:#111514}.ds-modal-primary{border:1px solid #173d9e;background:#173d9e;color:#eef0ec}.ds-modal button:hover{filter:brightness(.92)}.ds-modal button:focus-visible{outline:3px solid #c5820d;outline-offset:2px}@media(max-width:600px){.ds-modal{width:calc(100vw - 28px);border-radius:24px 24px 0 0}}@media(prefers-reduced-transparency:reduce){.ds-modal{background-color:#eef0ec;background-image:none}}"
+    },
+    {
+      "name": "Memory Film Start",
+      "kind": "button",
+      "refersTo": "film-start",
+      "description": "真实照片就绪后由用户主动触发全屏与音乐的珊瑚主动作。",
+      "html": "<button class=\"ds-film-start\" type=\"button\"><span class=\"ds-film-start-icon\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"><path d=\"m9 7 8 5-8 5V7Z\"/></svg></span><span>开始放映</span></button>",
+      "css": ".ds-film-start{min-width:176px;min-height:58px;padding:10px 24px 10px 12px;display:inline-flex;align-items:center;justify-content:flex-start;gap:10px;border:1px solid rgba(255,226,217,.7);border-radius:16px;color:#fffaf7;background:linear-gradient(135deg,#f06b5d,#c94f60);box-shadow:inset 0 1px 0 rgba(255,255,255,.58),inset 0 -1px 0 rgba(122,31,44,.34),0 18px 48px rgba(180,55,66,.28),0 5px 14px rgba(0,7,7,.28);font:600 11px/1.3 'Segoe UI Variable Text','PingFang SC',sans-serif;letter-spacing:.035em;cursor:pointer;transition:background-color 180ms cubic-bezier(.22,1,.36,1),transform 140ms cubic-bezier(.2,0,0,1),box-shadow 180ms cubic-bezier(.22,1,.36,1)}.ds-film-start-icon{width:38px;height:38px;display:grid;flex:0 0 38px;place-items:center;border:1px solid rgba(255,255,255,.48);border-radius:50%;background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.26)}.ds-film-start svg{width:18px;height:18px;fill:currentColor}.ds-film-start:hover{background:linear-gradient(135deg,#f47769,#d95867);box-shadow:inset 0 1px 0 rgba(255,255,255,.68),0 22px 54px rgba(180,55,66,.36),0 6px 18px rgba(0,7,7,.28)}.ds-film-start:active{transform:translateY(1px)}.ds-film-start:focus-visible{outline:2px solid #9edbcb;outline-offset:4px}.ds-film-start:disabled{cursor:wait;opacity:.62}@media(prefers-reduced-transparency:reduce){.ds-film-start{background:#c94f60}}@media(prefers-reduced-motion:reduce){.ds-film-start{transition-duration:1ms}}"
+    },
+    {
+      "name": "Memory Film Chapter Rail",
+      "kind": "custom",
+      "refersTo": "film-chapter-rail",
+      "description": "与 75.3 秒影片时间线同步的只读七章轨，不冒充可拖动控件。",
+      "html": "<div class=\"ds-film-rail\" aria-label=\"影片七个章节\"><div class=\"ds-film-rail-progress\" aria-hidden=\"true\"><span></span></div><ol class=\"ds-film-rail-chapters\"><li class=\"ds-film-rail-chapter ds-film-rail-chapter-active\" aria-current=\"step\"><i></i><span>01</span><strong>共同校样</strong></li><li class=\"ds-film-rail-chapter\"><i></i><span>02</span><strong>散落片段</strong></li><li class=\"ds-film-rail-chapter\"><i></i><span>03</span><strong>时间向前</strong></li><li class=\"ds-film-rail-chapter\"><i></i><span>04</span><strong>重新相遇</strong></li><li class=\"ds-film-rail-chapter\"><i></i><span>05</span><strong>穿过四年</strong></li><li class=\"ds-film-rail-chapter\"><i></i><span>06</span><strong>重回一处</strong></li><li class=\"ds-film-rail-chapter\"><i></i><span>07</span><strong>写给我们</strong></li></ol></div>",
+      "css": ".ds-film-rail{width:min(960px,calc(100vw - 40px));padding:14px 0 0;color:rgba(220,233,228,.5);background:#061817;font-family:'Segoe UI Variable Text','PingFang SC',sans-serif}.ds-film-rail-progress{position:relative;height:1px;overflow:hidden;background:rgba(214,239,231,.18)}.ds-film-rail-progress span{position:absolute;inset:-1px 85.714% -1px 0;background:#f06b5d;box-shadow:0 0 12px rgba(240,107,93,.46)}.ds-film-rail-chapters{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin:0;padding:10px 0 0;list-style:none}.ds-film-rail-chapter{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px;min-width:0;font-size:9px}.ds-film-rail-chapter i{width:5px;height:5px;border:1px solid currentColor;border-radius:50%}.ds-film-rail-chapter>span{font:400 12px/1 'Memory Display','ZCOOL QingKe HuangYou',sans-serif;font-variant-numeric:tabular-nums}.ds-film-rail-chapter strong{grid-column:1/-1;overflow:hidden;font-size:9px;font-weight:500;text-overflow:ellipsis;white-space:nowrap}.ds-film-rail-chapter-active{color:#f4f8f5}.ds-film-rail-chapter-active i{border-color:#f06b5d;background:#f06b5d;box-shadow:0 0 0 4px rgba(240,107,93,.12)}@media(max-width:719px){.ds-film-rail-chapters{display:flex}.ds-film-rail-chapter{display:none}.ds-film-rail-chapter-active{display:grid;grid-template-columns:auto auto 1fr}.ds-film-rail-chapter-active strong{grid-column:auto}}@media(prefers-contrast:more){.ds-film-rail{color:#dce9e4}.ds-film-rail-chapter-active{color:#f4f8f5}}"
+    },
+    {
+      "name": "Desktop-only Device Notice",
+      "kind": "custom",
+      "refersTo": "device-notice",
+      "description": "手机和平板留在相册时显示的设备说明；关闭目标 44×44px，并保留焦点圈定、Esc/背景关闭、滚动锁与焦点归还。",
+      "html": "<div class=\"ds-device-notice-layer\"><section class=\"ds-device-notice\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"ds-device-notice-title\"><button class=\"ds-device-notice-dismiss\" type=\"button\" aria-label=\"关闭提示\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m7 7 10 10M17 7 7 17\"/></svg></button><div class=\"ds-device-notice-visual\" aria-hidden=\"true\"><div class=\"ds-device-notice-screen\"><svg class=\"ds-device-notice-photo\" viewBox=\"0 0 320 200\"><rect width=\"320\" height=\"200\" fill=\"#173f39\"/><circle cx=\"246\" cy=\"54\" r=\"28\" fill=\"#9edbcb\" opacity=\".7\"/><path d=\"M0 164 76 88l55 52 46-43 143 103H0Z\" fill=\"#7f9993\"/><path d=\"M0 182 94 118l62 44 54-40 110 78H0Z\" fill=\"#f4f8f5\" opacity=\".76\"/></svg><span class=\"ds-device-notice-track\"><i></i><i></i><i></i></span></div><div class=\"ds-device-notice-stand\"></div></div><div class=\"ds-device-notice-copy\"><h2 id=\"ds-device-notice-title\">这段回忆，<br>留给大一点的屏幕。</h2><p>Memory Film 会让照片在空间里重新排列，并配合音乐全屏播放。为了保留完整的画面和节奏，请使用电脑浏览器观看。</p><span class=\"ds-device-notice-device\"><i></i>电脑端可用 · 建议佩戴耳机</span></div><button class=\"ds-device-notice-close\" type=\"button\">继续浏览相册</button></section></div>",
+      "css": ".ds-device-notice-layer{position:relative;display:grid;align-items:end;min-height:620px;padding:16px;background:rgba(5,21,19,.64);font-family:'Segoe UI Variable Text','PingFang SC',sans-serif}.ds-device-notice{position:relative;display:grid;width:min(100%,430px);max-height:calc(100vh - 32px);justify-self:center;overflow:auto;border:1px solid rgba(225,244,237,.72);border-radius:28px;padding:18px;color:#17332e;background:linear-gradient(145deg,#fff,#e6f3ed);box-shadow:0 34px 90px rgba(2,24,20,.34),0 8px 28px rgba(2,24,20,.18)}.ds-device-notice-dismiss{position:absolute;z-index:4;top:28px;right:28px;width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(238,250,246,.3);border-radius:50%;color:#f7fffc;background:rgba(7,29,27,.74);box-shadow:inset 0 1px rgba(255,255,255,.18),0 8px 24px rgba(0,10,9,.18);cursor:pointer}.ds-device-notice-dismiss svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}.ds-device-notice-visual{position:relative;display:grid;min-height:184px;overflow:hidden;border-radius:20px;place-items:center;background:radial-gradient(circle at 50% 12%,rgba(82,166,145,.32),transparent 54%),linear-gradient(155deg,#071d1b,#123b3a)}.ds-device-notice-screen{position:relative;z-index:2;width:min(72%,250px);aspect-ratio:16/10;border:4px solid rgba(244,248,245,.92);border-radius:14px;padding:5px;background:#f4f8f5;box-shadow:0 20px 42px rgba(0,8,7,.42)}.ds-device-notice-photo{width:100%;height:100%;display:block;border-radius:7px}.ds-device-notice-track{position:absolute;right:8px;bottom:-20px;left:8px;display:flex;height:1px;align-items:center;justify-content:space-between;background:rgba(158,219,203,.26)}.ds-device-notice-track i{width:4px;height:4px;border-radius:50%;background:rgba(158,219,203,.54)}.ds-device-notice-track i:first-child{background:#f06b5d;box-shadow:0 0 0 4px rgba(240,107,93,.16)}.ds-device-notice-stand{position:absolute;z-index:1;bottom:15px;left:50%;width:58px;height:34px;border-bottom:4px solid rgba(244,248,245,.74);transform:translateX(-50%)}.ds-device-notice-copy{padding:24px 6px 18px}.ds-device-notice-copy h2{max-width:10ch;margin:0;color:#17332e;font:400 clamp(38px,12vw,52px)/.98 'Memory Display','ZCOOL QingKe HuangYou',sans-serif;letter-spacing:-.025em}.ds-device-notice-copy p{max-width:36em;margin:17px 0 0;color:#49675f;font-size:14px;line-height:1.75}.ds-device-notice-device{display:inline-flex;align-items:center;gap:8px;margin-top:18px;border-radius:999px;padding:8px 11px;color:#365a51;background:rgba(77,188,164,.13);font-size:11px;font-weight:650}.ds-device-notice-device i{width:6px;height:6px;border-radius:50%;background:#4dbca4;box-shadow:0 0 0 4px rgba(77,188,164,.12)}.ds-device-notice-close{width:100%;min-height:52px;border:1px solid rgba(17,80,67,.18);border-radius:16px;color:#f7fffc;background:#276dd2;box-shadow:inset 0 1px rgba(255,255,255,.28),0 12px 28px rgba(39,109,210,.22);font-size:14px;font-weight:680;cursor:pointer}.ds-device-notice button:focus-visible{outline:3px solid #f06b5d;outline-offset:3px}.ds-device-notice button:active{transform:scale(.985)}@media(min-width:720px){.ds-device-notice-layer{align-items:center}}@media(orientation:landscape) and (max-height:520px){.ds-device-notice-layer{align-items:start;min-height:410px;overflow:auto}.ds-device-notice{width:min(920px,calc(100vw - 32px));max-height:none;grid-template-columns:minmax(230px,.9fr) minmax(280px,1.1fr);align-items:center;column-gap:24px}.ds-device-notice-visual{grid-row:1/3}.ds-device-notice-close{grid-column:2}}@media(prefers-reduced-transparency:reduce){.ds-device-notice-layer{background:rgba(5,21,19,.92)}.ds-device-notice{background:#f4f8f5}.ds-device-notice-dismiss{background:#123b3a}}@media(prefers-reduced-motion:reduce){.ds-device-notice button{transition:none}}@media(prefers-contrast:more){.ds-device-notice{border-color:#17332e}.ds-device-notice-dismiss{border-color:#f4f8f5}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "共同校样桌 / The Shared Proof Table",
+    "overview": "Memory Uni 像一张毕业前摊开的共同校样桌：每位同学补上一张照片，照片被校准、归档，再沿连续的四年接力轨走向 Memory Film。界面不是相册应用的卡片集合，而是一套能读出共同劳动、时间递进与最终放映的编辑结构。\n\n整体气质清新、精密而有人情味。薄荷白纸面、纤细青灰边与连续圆角提供明亮秩序，晴空蓝负责推动贡献，薄荷绿、阳光黄和珊瑚红分别标记四年入口与影片终点。真实照片始终占据最大视觉权重；玻璃只在上传、轨道节点、纪念册封套、影片入口和弹层等功能节点出现，并使用 /images/memory-glass-texture.png 建立可触摸的厚度。\n\nMemory Film 是同一世界的夜间放映章节，章节方向为“一卷会自己重新装订的毕业底片”。明亮校样桌在这里降为深青黑放映空间，同一批真实照片不被替换，而是连续重组为照片墙、散落片段、横向时间流、记忆环、隧道与最终重聚，再进入四年档案和纸质书信。它改变明度、纵深与节奏，但继续使用相纸、薄荷反光、珊瑚定位和连续圆角，因此不能读成另一个网站。",
+    "keyCharacteristics": [
+      "一张连续的共享校样桌，而非彼此独立的卡片阵列。",
+      "清晰的“上传 → 四年 → Memory Film”阅读方向。",
+      "iOS 式连续圆角、纤细定位线与稀疏压花玻璃共同建立柔和但精密的编辑感。",
+      "日光感主站与深青色影片空间属于同一青春色彩世界，只改变明度与节奏。",
+      "Memory Film 以“一卷会自己重新装订的毕业底片”为夜间章节方向，使用同一批真实照片完成连续重组。",
+      "真实照片领先于装饰，并为低动态、低透明度偏好提供完整降级。"
+    ],
+    "rules": [
+      {
+        "name": "The Fresh Index Rule",
+        "body": "四种年份色只以浅色索引面、边线或节点出现；深色仅保留给上传与影片主操作，避免把青春感误做成高饱和糖果界面。",
+        "section": "colors"
+      },
+      {
+        "name": "The Photo Color Rule",
+        "body": "界面颜色负责方向，真实照片负责丰富；年份面板保留低透明浅色底，照片默认保持自然色彩，不再依赖悬停才恢复颜色。",
+        "section": "colors"
+      },
+      {
+        "name": "The Day-to-Night Rule",
+        "body": "夜间章节通过降低明度、增强纵深和提高薄荷/珊瑚对比进入放映状态；不要另起一套紫蓝、霓虹或与主站无关的品牌色。",
+        "section": "colors"
+      },
+      {
+        "name": "The Two-Voice Rule",
+        "body": "展示字体只说“时间与章节”，正文字体负责“动作与事实”；不要在长正文、错误信息或输入字段中使用展示字体。",
+        "section": "typography"
+      },
+      {
+        "name": "The One-Table Rule",
+        "body": "同一页面的模块必须共享边线、轨道或对齐基准；不要把上传、年份和影片拆成三个互不相干的落地页区块。",
+        "section": "layout"
+      },
+      {
+        "name": "The Desktop Film Boundary Rule",
+        "body": "仅电脑端是 Memory Film 的产品与功能边界，不是通用设计系统原则；不得据此隐藏主站上传、浏览或其他移动端核心能力。",
+        "section": "layout"
+      },
+      {
+        "name": "The Functional Glass Rule",
+        "body": "玻璃必须对应可操作、可到达或可确认的功能节点；在 Memory Film 中只保留给退出、播放、进度、重播和设备提示控制，纯装饰背景与整片场景不得使用玻璃纹理。",
+        "section": "elevation"
+      },
+      {
+        "name": "The Stable Fallback Rule",
+        "body": "在 prefers-reduced-transparency: reduce 下移除纹理、透明与 backdrop filter；主站使用不透明薄荷白表面，Memory Film 使用更实的深青功能面，两者都用清晰青灰或相纸边保留层级。",
+        "section": "elevation"
+      },
+      {
+        "name": "The Continuous Corner Rule",
+        "body": "圆角必须反映层级：小控件紧、内容卡适中、大型玻璃面更舒展；相邻层之间保持至少 2—4px 的圆角差，避免每个元素都像独立气泡。",
+        "section": "shapes"
+      },
+      {
+        "name": "The Honest State Rule",
+        "body": "所有加载、空、错误、完成和禁用状态都必须保留原组件尺寸与真实操作路径，不用伪照片或虚构数据填充。",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do 让每个视口先读到真实照片，再读到钢框、纹理和动效。",
+      "Do 用晴空蓝上传、四色浅彩接力轨和珊瑚影片终点维持完整且可回退的体验顺序。",
+      "Do 只在上传、纪念册封套、年份入口、影片入口和弹层等功能节点使用 /images/memory-glass-texture.png。",
+      "Do 让相邻学年的背景渐变端点完全一致，并让结尾影片章节至少占满一个视口。",
+      "Do 维持 1px 精细钢边，并按 10/14/16/24/28px 使用分层连续圆角。",
+      "Do 为 prefers-reduced-motion 提供短交叉淡入或即时状态，为 prefers-reduced-transparency 提供不透明表面。",
+      "Do 保持主要触控目标至少 44×44px，并让键盘焦点与悬停同样清晰。",
+      "Do 让 Memory Film 使用深青黑、抬升深青、相纸白、影片薄荷、影片珊瑚和青灰构成同一产品的夜间章节。",
+      "Do 保持约 01:15 的七章真实顺序，并让同一批真实照片在墙、散落、时间流、环、隧道和重聚之间连续变形。",
+      "Do 在受限设备进入任何影片数据或媒体路径之前完成门禁，并让主站提示与直达说明都能清楚返回相册。",
+      "Do 为设备提示保留 44×44px 关闭、焦点圈定、Esc/背景关闭、滚动锁、焦点归还和矮横屏滚动重排。"
+    ],
+    "donts": [
+      "Don't 使用通用 Bento 网格把共同校样桌拆成一组独立卡片。",
+      "Don't 把所有按钮、筛选器、导航和标签都做成 pill；大多数控件应使用 14—16px 连续圆角。",
+      "Don't 使用紫蓝 AI 渐变、霓虹光晕或大面积彩色玻璃制造“高级感”。",
+      "Don't 把玻璃纹理铺满页面、覆盖真实照片，或叠加多层浅色玻璃卡片。",
+      "Don't 机械复制 Apple 页面；只借鉴信息层级、材质克制、直接反馈和无障碍原则。",
+      "Don't 在数据尚未校正时显示拍摄日期，也不要虚构照片、评价或用户证据。",
+      "Don't 把 Memory Film 的照片门、左下叙事和右下开始按钮泛化为所有页面必须采用的构图。",
+      "Don't 在影片场景、照片墙、档案或书信外再套一层大玻璃卡片；夜间玻璃只属于退出、播放、进度、重播和设备提示控制。",
+      "Don't 让手机或平板因横屏、缩放或视口变宽而绕过设备门禁，也不要在受限设备上请求远程照片、创建音频或挂载 Stage。",
+      "Don't 把“仅电脑端”扩张成全站原则；主站上传、四年浏览、照片查看和设备提示继续完整支持移动端。"
+    ]
+  }
+}

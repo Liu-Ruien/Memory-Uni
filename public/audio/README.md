@@ -1,5 +1,5 @@
-# Background music
+# Memory Film audio
 
-`background.wav` is a quiet generated placeholder so the music control works immediately.
+`background.wav` is the temporary soundtrack for `/memory-film`. It is loaded only after the visitor presses “开始回忆”; the main album does not preload or play it.
 
-To use your own track, add it to this folder and update `src/config/music.ts`. Visitors have no UI for replacing this file; only the site owner can change it in the project.
+To replace the soundtrack, keep the same public path or update `filmAudioConfig` in `src/features/memory-film/config/filmConfig.ts`. Visitors cannot replace this file from the website.

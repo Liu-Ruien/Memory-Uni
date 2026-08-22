@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { fitPhotoAspectDimensions, type PhotoAspectPreset } from '../lib/photoAspect'
 import { maximumPhotoSize } from '../storage/PhotoStorage'
 import { appleEaseOut } from '../design/motion'
+import { useDialogFocusScope } from '../hooks/useDialogFocusScope'
 
 const cropViewportPadding = 18
 const maximumOutputLongEdge = 4096
@@ -158,6 +159,7 @@ export function ImageCropper({
 }: ImageCropperProps) {
   const reduceMotion = useReducedMotion()
   const cropViewportRef = useRef<HTMLDivElement>(null)
+  const cancelButtonRef = useRef<HTMLButtonElement>(null)
   const hasSetInitialZoom = useRef(false)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -169,6 +171,12 @@ export function ImageCropper({
   const cropAspect = aspectPreset.aspect
   const minZoom = useMemo(() => minimumCoverZoom(mediaSize, cropSize), [cropSize, mediaSize])
   const maxZoom = Math.max(3, minZoom * 3)
+  const dialogRef = useDialogFocusScope<HTMLElement>(true, {
+    initialFocusRef: cancelButtonRef,
+    onEscape: () => {
+      if (!isProcessing) onCancel()
+    },
+  })
 
   useEffect(() => {
     hasSetInitialZoom.current = false
@@ -217,14 +225,6 @@ export function ImageCropper({
     setZoom((currentZoom) => Math.min(maxZoom, Math.max(minZoom, currentZoom)))
   }, [cropSize, maxZoom, mediaSize, minZoom])
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !isProcessing) onCancel()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isProcessing, onCancel])
-
   const handleCropComplete = useCallback((_area: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels)
   }, [])
@@ -257,8 +257,10 @@ export function ImageCropper({
           if (event.target === event.currentTarget && !isProcessing) onCancel()
         }}
         role="presentation"
+        data-dialog-layer="true"
       >
         <motion.section
+          ref={dialogRef}
           className="apple-modal-shell flex max-h-[96dvh] w-full max-w-3xl flex-col overflow-hidden !rounded-b-none !rounded-t-[30px] sm:!rounded-[30px]"
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(24px) scale(0.985)' }}
           animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
@@ -267,6 +269,7 @@ export function ImageCropper({
           role="dialog"
           aria-modal="true"
           aria-labelledby="cropper-title"
+          tabIndex={-1}
           data-motion-transform="true"
         >
           <span className="mx-auto mt-2.5 h-1 w-9 rounded-full bg-[var(--separator-strong)] sm:hidden" aria-hidden="true" />
@@ -282,6 +285,7 @@ export function ImageCropper({
               <p className="apple-tertiary-text mt-2 truncate text-[11px]">{filename} · {aspectPreset.description}</p>
             </div>
             <button
+              ref={cancelButtonRef}
               type="button"
               onClick={onCancel}
               disabled={isProcessing}

@@ -1,7 +1,8 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { academicYears, type AcademicYearId } from '../data/academicYears'
 import { appleEaseOut } from '../design/motion'
+import { useDialogFocusScope } from '../hooks/useDialogFocusScope'
 
 interface TakenDateModalProps {
   isOpen: boolean
@@ -28,19 +29,10 @@ export function TakenDateModal({
 }: TakenDateModalProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const reduceMotion = useReducedMotion()
-
-  useEffect(() => {
-    if (!isOpen) return
-    const focusId = window.setTimeout(() => inputRef.current?.focus(), 120)
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCancel()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.clearTimeout(focusId)
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [isOpen, onCancel])
+  const dialogRef = useDialogFocusScope<HTMLFormElement>(isOpen, {
+    initialFocusRef: inputRef,
+    onEscape: onCancel,
+  })
 
   return (
     <AnimatePresence>
@@ -55,8 +47,10 @@ export function TakenDateModal({
             if (event.target === event.currentTarget) onCancel()
           }}
           role="presentation"
+          data-dialog-layer="true"
         >
           <motion.form
+            ref={dialogRef}
             className="apple-modal-shell w-full max-w-md !rounded-b-none !rounded-t-[30px] px-6 pb-6 pt-3 sm:!rounded-[30px] sm:px-8 sm:pb-8 sm:pt-8"
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(18px) scale(0.97)' }}
             animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
@@ -69,6 +63,7 @@ export function TakenDateModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="taken-date-title"
+            tabIndex={-1}
             data-motion-transform="true"
           >
             <span className="mx-auto mb-5 block h-1 w-9 rounded-full bg-[var(--separator-strong)] sm:hidden" aria-hidden="true" />

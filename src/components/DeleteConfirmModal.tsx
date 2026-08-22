@@ -1,7 +1,8 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import type { Photo } from '../data/photos'
 import { appleEaseOut } from '../design/motion'
+import { useDialogFocusScope } from '../hooks/useDialogFocusScope'
 
 interface DeleteConfirmModalProps {
   isOpen: boolean
@@ -20,16 +21,12 @@ export function DeleteConfirmModal({
 }: DeleteConfirmModalProps) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
   const reduceMotion = useReducedMotion()
-
-  useEffect(() => {
-    if (!isOpen) return
-    cancelButtonRef.current?.focus()
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !isDeleting) onCancel()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isDeleting, isOpen, onCancel])
+  const dialogRef = useDialogFocusScope<HTMLElement>(isOpen && Boolean(photo), {
+    initialFocusRef: cancelButtonRef,
+    onEscape: () => {
+      if (!isDeleting) onCancel()
+    },
+  })
 
   return (
     <AnimatePresence>
@@ -44,8 +41,10 @@ export function DeleteConfirmModal({
             if (event.target === event.currentTarget && !isDeleting) onCancel()
           }}
           role="presentation"
+          data-dialog-layer="true"
         >
           <motion.section
+            ref={dialogRef}
             className="apple-modal-shell w-full max-w-[390px] p-6 sm:p-7"
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'scale(0.96)' }}
             animate={{ opacity: 1, transform: 'scale(1)' }}
@@ -55,6 +54,7 @@ export function DeleteConfirmModal({
             aria-modal="true"
             aria-labelledby="delete-confirm-title"
             aria-describedby="delete-confirm-description"
+            tabIndex={-1}
             data-motion-transform="true"
           >
             <div className="flex items-start gap-4">

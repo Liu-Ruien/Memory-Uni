@@ -1,0 +1,105 @@
+{
+  "title": "选择 Memory Uni 的新视觉世界",
+  "question": "三个方向都保留上传、四学年浏览与 Memory Film。请选择最想继续打磨并最终更新到正式网站的一个。",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "叠印桌",
+      "kicker": "THE ROLL",
+      "lineage": "共享校样桌、透明套印片与印前定位标",
+      "thesis": "每位同学补进一层真实照片，散落的四年才逐步对齐成同一段记忆。",
+      "palette": ["#EEF0EC", "#182024", "#3758F9", "#FF694A", "#D7F64A"],
+      "materials": ["雾银台面", "半透明醋酸片", "套色油墨", "定位标"],
+      "viewport": "首屏是一张占满视口的共享校样桌：真实毕业合照压在中心，多张透明照片层从四周错位叠入；左上是克制的 Memory Uni 标识，右下的“补上一张照片”像一枚等待落下的定位片，四学年入口沿桌面边缘形成连续刻度。",
+      "risk": "如果透明层过多会显得凌乱，因此照片层数与文字密度必须受到严格控制。",
+      "raised": [
+        {"from": "粒子事件图", "raise": "让每张照片汇向 Memory Film 的轨迹可见，而不是只做静态拼贴。"},
+        {"from": "定向地图", "raise": "四个学年保持固定底层，当前探索路径永远清楚。"},
+        {"from": "玻璃分区墙", "raise": "用结构边界承载层次，不把玻璃仅当作装饰滤镜。"}
+      ],
+      "comp": ".impeccable/mocks/decision/assigned.png"
+    },
+    {
+      "id": "model-pick",
+      "label": "剪辑台",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "电影接触印样、剪辑工作台与场记时间码",
+      "thesis": "四年不是四个相册，而是一部正在由同学共同剪成的电影。",
+      "palette": ["#121515", "#F2F0E9", "#E7FF4F", "#DB4B3F", "#78A5FF"],
+      "materials": ["背光接触印样", "哑黑剪辑台", "铅笔场记", "胶片边码"],
+      "viewport": "首屏像一张横向电影剪辑台：毕业合照成为正在审看的主画面，四年照片以接触印样横贯视口；上传动作是醒目的“加入一帧”，浏览按四卷胶片展开，Memory Film 作为最终放映位在画面尽头发光。",
+      "risk": "电影隐喻最容易理解，也最接近相册产品常见的高级路线，必须靠真实剪辑交互而不是复古滤镜保持独特。",
+      "comp": ".impeccable/mocks/decision/model-pick.png"
+    },
+    {
+      "id": "challenger-glass",
+      "label": "光谱玻璃墙",
+      "verdict": "competitive",
+      "lineage": "手工压花玻璃、钢制分格与彩色透光片",
+      "thesis": "四年记忆是一面会被同学逐格点亮的透光墙。",
+      "palette": ["#F5F6F2", "#111514", "#183FAE", "#D58A00", "#6F1728"],
+      "materials": ["手工压花玻璃", "黑色钢格", "钴蓝透光片", "暖白背光"],
+      "viewport": "整个首屏由不等宽玻璃分格组成，真实毕业合照跨越最大的两个透明格；四个学年各占一组玻璃窗，上传格以钴蓝背光点亮，Memory Film 藏在最深处的暗红放映格中。",
+      "case": "它把 Liquid Glass 变成信息架构，产品路径非常清楚；但同学对这种工坊材料的直接情感认同弱于前两个方向。",
+      "risk": "如果边框过重或纹理失真，会抢走照片主角并显得像建筑工作室网站。",
+      "comp": ".impeccable/mocks/decision/challenger-glass.png",
+      "hero": ".impeccable/mocks/decision/glazier-hero.webp",
+      "board": ".impeccable/mocks/decision/glazier-board.webp"
+    },
+    {
+      "id": "challenger-collider",
+      "label": "记忆事件图",
+      "verdict": "declined",
+      "lineage": "粒子探测器事件显示",
+      "thesis": "每次上传都是一次从中心向四年轨道扩散的记忆事件。",
+      "palette": ["#0B0D12", "#F4D84A", "#5DB8FF", "#D94A52"],
+      "materials": ["近黑真空场", "信号轨迹", "同心探测环"],
+      "viewport": "合照在中心，照片沿四层环形轨道展开。",
+      "case": "可视化汇聚很强，但科学仪表感会削弱同学的情感识别，也让上传与浏览显得难懂。",
+      "kept": "保留了“每张照片都有一条汇向影片的路径”这一纪律。",
+      "risk": "极易滑向霓虹科幻界面。",
+      "hero": "https://impeccable.style/worlds/cards/scientific-notation-particle-detector-event-display-hero.webp"
+    },
+    {
+      "id": "challenger-route",
+      "label": "四年路线图",
+      "verdict": "declined",
+      "lineage": "定向越野地图与标准图例",
+      "thesis": "同学沿四个学年控制点自由选择自己的回忆路线。",
+      "palette": ["#F5F3DB", "#7D9A5E", "#855B36", "#7E2BC3"],
+      "materials": ["等高线", "路线叠图", "控制点印记"],
+      "viewport": "四年作为一张可平移路线图，照片是沿途控制点。",
+      "case": "路径表达明确，但现有照片并不对应真实校园地理，继续强化会制造不真实的关系。",
+      "kept": "保留固定四年底图与当前路径始终分离的导航原则。",
+      "risk": "很容易让用户误以为这是校园地图产品。",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map-hero.webp"
+    },
+    {
+      "id": "challenger-bbs",
+      "label": "凌晨留言板",
+      "verdict": "declined",
+      "lineage": "拨号 BBS 与字符画夜站",
+      "thesis": "十几位同学像同一条电话线上的来访者，逐条留下照片。",
+      "palette": ["#050505", "#32E6DB", "#F153C6", "#F6F4E8"],
+      "materials": ["字符网格", "行式加载", "在线状态"],
+      "viewport": "上传记录逐行抵达，四年以编号菜单进入。",
+      "case": "共同在线感成立，但复古终端会压扁照片质感，也不符合手机端直观浏览。",
+      "kept": "保留“每次贡献都应被清楚看见并即时回应”的状态设计。",
+      "risk": "会成为技术趣味，而不是共同回忆。",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-ansi-bbs-nightboard-hero.webp"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "comp", "toggle": true},
+  "canon": true,
+  "canonCard": {
+    "label": "高完成度经典相册",
+    "thesis": "用大幅真实照片、清晰四年分区与克制玻璃导航，把熟悉的纪念相册做到极致。",
+    "palette": ["#F5F5F3", "#171719", "#2675E8", "#D9D9D4"],
+    "materials": ["无缝照片", "浅色纸面", "克制液态玻璃"],
+    "viewport": "一张大幅毕业合照主导首屏，上传为明确主按钮，四学年作为紧随其后的水平入口，Memory Film 位于叙事终点。",
+    "risk": "可靠易用，但和高质量毕业纪念网站的差异主要来自内容而不是形式。",
+    "comp": ".impeccable/mocks/decision/canon.png"
+  },
+  "steer": true
+}

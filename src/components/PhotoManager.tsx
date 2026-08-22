@@ -4,8 +4,9 @@ import type { AcademicYearId } from '../data/academicYears'
 import type { Photo } from '../data/photos'
 import { appleEaseOut, appleSpring } from '../design/motion'
 import type { AcademicYearSchemaStatus } from '../hooks/useAcademicYearSchema'
+import { useDialogFocusScope } from '../hooks/useDialogFocusScope'
 import { detectPhotoAspect, isNearPhotoAspect, type PhotoAspectPreset } from '../lib/photoAspect'
-import { formatTakenAt, isValidTakenAt, readExifTakenAt, rememberAcademicYear, rememberTakenAt } from '../lib/photoTakenAt'
+import { isValidTakenAt, readExifTakenAt, rememberAcademicYear, rememberTakenAt } from '../lib/photoTakenAt'
 import { validatePhotoFile } from '../storage/PhotoStorage'
 import { DeleteConfirmModal } from './DeleteConfirmModal'
 import { ImageCropper } from './ImageCropper'
@@ -51,21 +52,25 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, academic
   const [croppedFiles, setCroppedFiles] = useState<File[]>([])
   const [cropTotal, setCropTotal] = useState(0)
   const [photoPendingDeletion, setPhotoPendingDeletion] = useState<Photo | null>(null)
+  const managerDialogRef = useDialogFocusScope<HTMLElement>(isOpen, {
+    onEscape: () => {
+      if (
+        !photoPendingDeletion
+        && processingFiles.length === 0
+        && pendingPhotos.length === 0
+        && preparedPhotos.length === 0
+      ) onClose()
+    },
+  })
 
   useEffect(() => {
     if (!isOpen) return
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (photoPendingDeletion) return
-      if (event.key === 'Escape' && processingFiles.length === 0 && pendingPhotos.length === 0 && preparedPhotos.length === 0) onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
     return () => {
       document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, onClose, pendingPhotos.length, photoPendingDeletion, preparedPhotos.length, processingFiles.length])
+  }, [isOpen])
 
   useEffect(() => {
     if (isOpen) return
@@ -291,8 +296,10 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, academic
             if (event.target === event.currentTarget && !photoPendingDeletion && processingFiles.length === 0 && pendingPhotos.length === 0 && preparedPhotos.length === 0) onClose()
           }}
           role="presentation"
+          data-dialog-layer="true"
         >
           <motion.section
+            ref={managerDialogRef}
             className="apple-modal-shell flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden !rounded-b-none !rounded-t-[30px] sm:max-h-[88dvh] sm:!rounded-[30px]"
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, transform: 'translateY(22px) scale(0.985)' }}
             animate={{ opacity: 1, transform: 'translateY(0px) scale(1)' }}
@@ -301,13 +308,14 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, academic
             role="dialog"
             aria-modal="true"
             aria-labelledby="photo-manager-title"
+            tabIndex={-1}
             data-motion-transform="true"
           >
             <span className="mx-auto mt-2.5 h-1 w-9 rounded-full bg-[var(--separator-strong)] sm:hidden" aria-hidden="true" />
             <header className="flex items-start justify-between px-5 pb-5 pt-4 sm:px-7 sm:pb-5 sm:pt-7">
               <div>
-                <p className="apple-kicker mb-2">共同数字相册</p>
-                <h2 id="photo-manager-title" className="text-xl font-semibold tracking-[-0.04em] sm:text-2xl">留下新的回忆</h2>
+                <h2 id="photo-manager-title" className="text-xl font-semibold tracking-[-0.035em] sm:text-2xl">共同相册 · 留下新的回忆</h2>
+                <p className="apple-secondary-text mt-1.5 text-xs">上传、整理，或者带走不再需要的照片。</p>
               </div>
               <button
                 type="button"
@@ -417,7 +425,7 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, academic
               ) : photos.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3">
                   <AnimatePresence initial={false}>
-                    {photos.map((photo) => {
+                    {photos.map((photo, photoIndex) => {
                       const deleting = deletingIds.includes(photo.id)
                       return (
                         <motion.div
@@ -429,19 +437,16 @@ export function PhotoManager({ isOpen, photos, isLoading, storageError, academic
                           className="group relative aspect-[3/4] overflow-hidden rounded-[15px] bg-[var(--surface-muted)] shadow-[var(--shadow-small)]"
                           data-motion-transform="true"
                         >
-                          <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
+                          <img src={photo.src} alt="共同相册中的照片" className="h-full w-full object-cover" />
                           <button
                             type="button"
                             onClick={() => requestPhotoDeletion(photo)}
                             disabled={deleting}
                             className="absolute right-1.5 top-1.5 grid size-11 place-items-center rounded-full bg-black/48 text-white shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.26)] backdrop-blur-xl transition-colors duration-[180ms] hover:bg-black/70 disabled:cursor-wait sm:size-9"
-                            aria-label={`删除照片：${photo.title}`}
+                            aria-label={`删除共同相册中的第 ${photoIndex + 1} 张照片`}
                           >
                             {deleting ? '·' : <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" /></svg>}
                           </button>
-                          <p className="absolute inset-x-0 bottom-0 truncate bg-black/32 px-2.5 py-2 text-[9px] font-medium text-white/90 backdrop-blur-xl">
-                            {photo.takenAt ? `拍摄于 ${formatTakenAt(photo.takenAt)}` : '拍摄时间未知'}
-                          </p>
                         </motion.div>
                       )
                     })}

@@ -34,7 +34,16 @@ export function ScrollTextReveal({ text, className = '' }: ScrollTextRevealProps
       const bounds = root.getBoundingClientRect()
       const startLine = window.innerHeight * 0.84
       const endLine = window.innerHeight * 0.38
-      const readingProgress = clamp((startLine - bounds.top) / Math.max(1, startLine - endLine))
+      const elementProgress = clamp((startLine - bounds.top) / Math.max(1, startLine - endLine))
+      const remainingPageDistance = Math.max(
+        0,
+        document.documentElement.scrollHeight - (window.scrollY + window.innerHeight),
+      )
+      const pageEndBuffer = Math.max(48, window.innerHeight * 0.08)
+      const pageEndProgress = clamp(
+        1 - Math.max(0, remainingPageDistance - pageEndBuffer) / Math.max(1, window.innerHeight * 0.42),
+      )
+      const readingProgress = Math.max(elementProgress, pageEndProgress)
       const denominator = Math.max(1, glyphs.length - 1)
 
       glyphs.forEach((glyph, index) => {

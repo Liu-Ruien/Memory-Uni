@@ -172,7 +172,7 @@ export function FanCarousel({
               }`}
               role="tab"
               aria-selected={index === activeIndex}
-              aria-label={`显示：${photo.title}`}
+              aria-label={`显示共同回忆照片 ${index + 1}`}
             />
           ))}
         </div>

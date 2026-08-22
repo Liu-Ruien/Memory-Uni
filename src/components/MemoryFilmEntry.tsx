@@ -1,28 +1,38 @@
-import type { MouseEvent } from 'react'
+import { useState, type MouseEvent } from 'react'
+import { isMemoryFilmBlockedDevice } from '../utils/memoryFilmAvailability'
+import { MobileFilmNoticeDialog } from './MobileFilmNoticeDialog'
 
 export function MemoryFilmEntry() {
-  const holdPlaceholderRoute = (event: MouseEvent<HTMLAnchorElement>) => {
+  const [noticeOpen, setNoticeOpen] = useState(false)
+
+  const handleOpenFilm = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isMemoryFilmBlockedDevice()) return
     event.preventDefault()
+    setNoticeOpen(true)
   }
 
   return (
-    <div className="mt-6 flex flex-col items-center sm:mt-7">
+    <div className="memory-film-entry">
       <a
         href="/memory-film"
-        onClick={holdPlaceholderRoute}
-        className="memory-film-entry-button"
-        aria-label="开始沉浸式回忆，即将开放"
-        aria-disabled="true"
-        title="沉浸式回忆将在下一阶段开放"
+        className="memory-film-portal"
+        aria-label="开始沉浸式回忆"
+        onClick={handleOpenFilm}
       >
-        <span>开始沉浸式回忆</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="m9 18 6-6-6-6" />
-        </svg>
+        <span className="memory-film-portal-copy">
+          <small>MEMORY FILM</small>
+          <strong>开始沉浸式回忆</strong>
+        </span>
+        <span className="memory-film-portal-aperture" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M9 7.4v9.2c0 .8.9 1.3 1.6.9l7.1-4.6a1.05 1.05 0 0 0 0-1.8l-7.1-4.6c-.7-.4-1.6.1-1.6.9Z" />
+          </svg>
+        </span>
       </a>
-      <p className="mt-2.5 text-[11px] leading-5 tracking-[0.01em] text-[var(--text-tertiary)]">
+      <p className="memory-film-entry-note">
         将四年的照片重新播放一次。
       </p>
+      <MobileFilmNoticeDialog open={noticeOpen} onClose={() => setNoticeOpen(false)} />
     </div>
   )
 }
