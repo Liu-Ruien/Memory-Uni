@@ -4,4 +4,8 @@ dist/
 .env.local
 .env.*.local
 .codex-vite.*.log
+.memory-film-dev.*.log
+.impeccable/mocks/
+.impeccable/questions/
+.impeccable/review/
 *.tsbuildinfo
